@@ -199,6 +199,7 @@ class LocalTripRepository(
         val attachments = db.attachmentDao().getByTrip(id).groupBy { it.reservationId }
         // Checklist (desmarcado) e orçamento vão para a cópia; gastos não, pois são da viagem já feita.
         val checklist = db.checklistDao().getByTrip(id)
+        val ideas = db.ideaDao().getByTrip(id)
         val categoryBudgets = db.categoryBudgetDao().getByTrip(id)
 
         // Arquivos são copiados antes da transação; se ela falhar, as cópias são apagadas.
@@ -231,6 +232,7 @@ class LocalTripRepository(
                     newAttachments.forEach { db.attachmentDao().upsert(it) }
                     checklist.forEach { db.checklistDao().upsert(it.copy(id = newId(), tripId = newTripId, done = false, createdAt = now, updatedAt = now)) }
                     categoryBudgets.forEach { db.categoryBudgetDao().upsert(it.copy(tripId = newTripId, updatedAt = now)) }
+                    ideas.forEach { db.ideaDao().upsert(it.copy(id = newId(), tripId = newTripId, placeId = it.placeId?.let(placeIds::get), createdAt = now, updatedAt = now)) }
                 }
             }
         } catch (e: Exception) {
@@ -361,6 +363,14 @@ class LocalActivityRepository(
                 updatedAt = clock.millis(),
             )
         )
+    }
+
+    override suspend fun applyOrder(tripId: String, date: LocalDate, activityIds: List<String>) {
+        val now = clock.millis()
+        val untimed = db.activityDao().getUntimedOfDay(tripId, date.toString()).associateBy { it.id }
+        // As que não estão na lista (não deveria acontecer) ficam depois, na ordem em que estavam.
+        val ordered = activityIds.mapNotNull(untimed::get) + untimed.values.filter { it.id !in activityIds }.sortedBy { it.sortOrder }
+        db.activityDao().upsertAll(ordered.mapIndexed { i, a -> a.copy(sortOrder = i, updatedAt = now) })
     }
 
     override suspend fun moveWithinDay(id: String, up: Boolean) {

@@ -10,6 +10,7 @@ import com.jpspm.travelplanner.data.local.CategoryBudgetEntity
 import com.jpspm.travelplanner.data.local.ChecklistItemEntity
 import com.jpspm.travelplanner.data.local.DestinationEntity
 import com.jpspm.travelplanner.data.local.ExpenseEntity
+import com.jpspm.travelplanner.data.local.IdeaEntity
 import com.jpspm.travelplanner.data.local.MapSnapshotEntity
 import com.jpspm.travelplanner.data.local.PlaceEntity
 import com.jpspm.travelplanner.data.local.ReservationEntity
@@ -66,6 +67,8 @@ data class BackupData(
     val expenses: List<ExpenseEntity> = emptyList(),
     val categoryBudgets: List<CategoryBudgetEntity> = emptyList(),
     val checklist: List<ChecklistItemEntity> = emptyList(),
+    /** Lista de ideias (desde a versão 5 do banco). */
+    val ideas: List<IdeaEntity> = emptyList(),
 )
 
 class LocalBackupRepository(
@@ -93,6 +96,7 @@ class LocalBackupRepository(
             expenses = ids.flatMap { db.expenseDao().getByTrip(it) },
             categoryBudgets = ids.flatMap { db.categoryBudgetDao().getByTrip(it) },
             checklist = ids.flatMap { db.checklistDao().getByTrip(it) },
+            ideas = ids.flatMap { db.ideaDao().getByTrip(it) },
         )
         val now = clock.now()
         val manifest = BackupManifest(BACKUP_SCHEMA_VERSION, APP_VERSION, now.toEpochMilliseconds(), ids)
@@ -144,6 +148,7 @@ class LocalBackupRepository(
                 data.expenses.forEach { e -> if (newer(e.updatedAt, db.expenseDao().get(e.id)?.updatedAt)) db.expenseDao().upsert(e) }
                 data.categoryBudgets.forEach { e -> if (newer(e.updatedAt, db.categoryBudgetDao().get(e.tripId, e.category)?.updatedAt)) db.categoryBudgetDao().upsert(e) }
                 data.checklist.forEach { e -> if (newer(e.updatedAt, db.checklistDao().get(e.id)?.updatedAt)) db.checklistDao().upsert(e) }
+                data.ideas.forEach { e -> if (newer(e.updatedAt, db.ideaDao().get(e.id)?.updatedAt)) db.ideaDao().upsert(e) }
             }
         }
         return data.trips.size

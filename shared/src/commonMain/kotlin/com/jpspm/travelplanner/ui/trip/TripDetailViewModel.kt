@@ -13,6 +13,11 @@ import com.jpspm.travelplanner.domain.repository.ReservationRepository
 import com.jpspm.travelplanner.domain.repository.TripRepository
 import com.jpspm.travelplanner.domain.city.CityGroup
 import com.jpspm.travelplanner.domain.city.CityGrouper
+import com.jpspm.travelplanner.data.settings.SettingsStore
+import com.jpspm.travelplanner.domain.planning.Conflict
+import com.jpspm.travelplanner.domain.planning.ConflictDetector
+import com.jpspm.travelplanner.domain.planning.DayOrder
+import com.jpspm.travelplanner.domain.planning.OrderSuggestion
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -36,6 +41,12 @@ data class TripDetailUiState(
     /** Cidades da viagem, cadastradas ou detectadas pelos lugares (aba Cidades). */
     val cities: List<CityGroup> = emptyList(),
     val zoneNames: Map<String, String> = emptyMap(),
+    /** Avisos de conflito ainda não dispensados, por dia (RF-37). */
+    val conflicts: Map<LocalDate, List<Conflict>> = emptyMap(),
+    /** Ordem sugerida para as atividades sem horário, por dia (RF-39). */
+    val orderSuggestions: Map<LocalDate, OrderSuggestion> = emptyMap(),
+    /** Título de cada item (`a:<id>` ou `r:<id>`), para escrever os avisos. */
+    val itemTitles: Map<String, String> = emptyMap(),
     val today: LocalDate? = null,
 )
 
@@ -45,6 +56,7 @@ class TripDetailViewModel(
     destinations: DestinationRepository,
     private val activities: ActivityRepository,
     reservations: ReservationRepository,
+    private val settings: SettingsStore,
     clock: Clock,
 ) : ViewModel() {
 
@@ -55,9 +67,12 @@ class TripDetailViewModel(
         destinations.observeDestinations(tripId),
         activities.observeActivities(tripId),
         reservations.observeReservations(tripId),
-    ) { trip, destinationList, activityList, reservationList ->
+        settings.settings,
+    ) { trip, destinationList, activityList, reservationList, appSettings ->
         val days = if (trip == null) emptyList() else AgendaBuilder.build(trip.days, activityList, reservationList)
         val cities = CityGrouper.group(destinationList, days)
+        val conflicts = if (trip == null) emptyList() else ConflictDetector.detect(trip, days, activityList, reservationList)
+            .filter { "$tripId:${it.key}" !in appSettings.dismissedConflicts }
         TripDetailUiState(
             loading = false,
             trip = trip,
@@ -66,6 +81,9 @@ class TripDetailViewModel(
             days = days,
             cities = cities,
             zoneNames = CityGrouper.zoneNames(cities),
+            conflicts = conflicts.groupBy { it.date },
+            orderSuggestions = days.mapNotNull { d -> DayOrder.suggest(d, reservationList)?.let { d.date to it } }.toMap(),
+            itemTitles = activityList.associate { "a:${it.id}" to it.title } + reservationList.associate { "r:${it.id}" to it.title },
             today = today,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TripDetailUiState())
@@ -92,6 +110,13 @@ class TripDetailViewModel(
     fun moveActivity(activityId: String, up: Boolean) = viewModelScope.launch { activities.moveWithinDay(activityId, up) }
 
     fun moveActivityToDate(activityId: String, date: LocalDate) = viewModelScope.launch { activities.moveToDate(activityId, date) }
+
+    fun dismissConflict(conflict: Conflict) = viewModelScope.launch {
+        settings.update { it.copy(dismissedConflicts = it.dismissedConflicts + "$tripId:${conflict.key}") }
+    }
+
+    fun applyOrder(date: LocalDate, suggestion: OrderSuggestion) =
+        viewModelScope.launch { activities.applyOrder(tripId, date, suggestion.activityIds) }
 
     fun deleteActivity(activityId: String) = viewModelScope.launch { activities.delete(activityId) }
 }

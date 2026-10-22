@@ -64,6 +64,7 @@
     <string name="tab_itinerary">Roteiro</string>
     <string name="tab_reservations">Reservas</string>
     <string name="tab_summary">Resumo</string>
+    <string name="tab_ideas">Ideias</string>
     <string name="tab_cities">Cidades</string>
     <string name="tab_budget">Gastos</string>
     <string name="tab_checklist">Checklist</string>
@@ -75,6 +76,7 @@
     <string name="fab_reservation">Reserva</string>
     <string name="fab_city">Cidade</string>
     <string name="fab_expense">Gasto</string>
+    <string name="fab_idea">Ideia</string>
 
     <!-- Roteiro -->
     <string name="itinerary_day_n">Dia %1$d</string>
@@ -344,4 +346,30 @@
     <string name="html_map_credit">Mapas: © OpenStreetMap contributors · OpenFreeMap · OpenMapTiles</string>
     <string name="html_generated_by">Gerado pelo Travel Planner em %1$s.</string>
     <string name="html_export_failed">Não foi possível gerar o roteiro em HTML.</string>
+
+    <!-- Ideias (RF-36) -->
+    <string name="ideas_empty_title">Nenhuma ideia ainda</string>
+    <string name="ideas_empty_message">Junte aqui o que quer fazer na viagem, sem se preocupar com o dia. Depois é só levar para o roteiro.</string>
+    <string name="ideas_no_place">Sem lugar</string>
+    <string name="idea_new_title">Nova ideia</string>
+    <string name="idea_edit_title">Editar ideia</string>
+    <string name="idea_title">O que fazer</string>
+    <string name="idea_schedule">Levar para o roteiro</string>
+    <string name="idea_delete_title">Excluir ideia?</string>
+    <string name="idea_delete_message">“%1$s” será removida da lista de ideias.</string>
+
+    <!-- Alertas de conflito (RF-37) -->
+    <string name="conflict_overlap">Horários se sobrepõem: %1$s e %2$s.</string>
+    <string name="conflict_during_transit">%1$s está marcado durante %2$s.</string>
+    <string name="conflict_night_without_lodging">Noite sem hospedagem cadastrada.</string>
+    <string name="conflict_outside_trip">Atividade fora das datas da viagem.</string>
+    <string name="conflict_dismiss">Dispensar aviso</string>
+
+    <!-- Deslocamento e ordem do dia (RF-38, RF-39) -->
+    <string name="walk_estimate">≈ %1$s · %2$s a pé (estimativa)</string>
+    <string name="walk_estimate_long">≈ %1$s · longe para ir a pé</string>
+    <string name="order_chip">Sugerir ordem · economiza ≈ %1$s</string>
+    <string name="order_dialog_title">Ordem sugerida</string>
+    <string name="order_dialog_message">Pelas atividades sem horário, o trajeto passaria de ≈ %1$s para ≈ %2$s:</string>
+    <string name="order_apply">Aplicar ordem</string>
 </resources>

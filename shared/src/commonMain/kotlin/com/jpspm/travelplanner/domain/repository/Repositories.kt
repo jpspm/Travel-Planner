@@ -86,6 +86,9 @@ interface ActivityRepository {
     /** Troca a posição manual com a atividade sem horário vizinha (RF-07). [up] = para cima. */
     suspend fun moveWithinDay(id: String, up: Boolean)
 
+    /** Grava a ordem das atividades sem horário do dia (ordem sugerida, RF-39). */
+    suspend fun applyOrder(tripId: String, date: LocalDate, activityIds: List<String>)
+
     suspend fun delete(id: String)
 }
 

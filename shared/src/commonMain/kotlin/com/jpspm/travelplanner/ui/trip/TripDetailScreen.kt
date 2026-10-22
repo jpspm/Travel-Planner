@@ -34,6 +34,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalUriHandler
 import com.jpspm.travelplanner.platform.externalMapUri
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.lazy.itemsIndexed
+import com.jpspm.travelplanner.domain.planning.Conflict
+import com.jpspm.travelplanner.domain.planning.OrderSuggestion
 import com.jpspm.travelplanner.domain.model.TripStatus
 import com.jpspm.travelplanner.domain.city.place
 import androidx.compose.foundation.layout.height
@@ -91,6 +94,7 @@ private enum class TripTab(val label: org.jetbrains.compose.resources.StringReso
     /** Só nas viagens passadas (RF-31). */
     SUMMARY(Res.string.tab_summary),
     ITINERARY(Res.string.tab_itinerary),
+    IDEAS(Res.string.tab_ideas),
     RESERVATIONS(Res.string.tab_reservations),
     CITIES(Res.string.tab_cities),
     BUDGET(Res.string.tab_budget),
@@ -110,6 +114,7 @@ fun TripDetailScreen(
     onOpenReservation: (String) -> Unit,
     onNewDestination: () -> Unit,
     onOpenCity: (String) -> Unit,
+    onOpenIdea: (String?) -> Unit,
     viewModel: TripDetailViewModel = koinViewModel { parametersOf(tripId) },
     backupViewModel: BackupViewModel = koinViewModel(),
 ) {
@@ -224,6 +229,7 @@ fun TripDetailScreen(
                 TripTab.RESERVATIONS -> Res.string.fab_reservation to { adding = AddRequest(null, includeActivity = false) }
                 TripTab.CITIES -> Res.string.fab_city to onNewDestination
                 TripTab.BUDGET -> Res.string.fab_expense to { addingExpense = true }
+                TripTab.IDEAS -> Res.string.fab_idea to { onOpenIdea(null) }
                 TripTab.SUMMARY, TripTab.CHECKLIST -> null
             }
             fab?.let { (label, action) ->
@@ -257,6 +263,11 @@ fun TripDetailScreen(
                 onMoveActivity = viewModel::moveActivity,
                 onMoveActivityToDate = viewModel::moveActivityToDate,
                 onDeleteActivity = viewModel::deleteActivity,
+                conflicts = state.conflicts,
+                orderSuggestions = state.orderSuggestions,
+                itemTitles = state.itemTitles,
+                onDismissConflict = viewModel::dismissConflict,
+                onApplyOrder = viewModel::applyOrder,
                 modifier = modifier,
             )
             TripTab.RESERVATIONS -> ReservationsTab(state.reservations, state.zoneNames, onOpenReservation, modifier)
@@ -269,6 +280,12 @@ fun TripDetailScreen(
                 modifier = modifier,
             )
             TripTab.CHECKLIST -> ChecklistTab(tripId, modifier)
+            TripTab.IDEAS -> IdeasTab(
+                tripId = tripId,
+                defaultDate = itineraryDay ?: state.today?.takeIf { it in trip.startDate..trip.endDate } ?: trip.startDate,
+                onOpenIdea = onOpenIdea,
+                modifier = modifier,
+            )
         }
     }
 
@@ -329,8 +346,22 @@ private fun ItineraryTab(
     onMoveActivity: (String, Boolean) -> Unit,
     onMoveActivityToDate: (String, kotlinx.datetime.LocalDate) -> Unit,
     onDeleteActivity: (String) -> Unit,
+    conflicts: Map<kotlinx.datetime.LocalDate, List<Conflict>>,
+    orderSuggestions: Map<kotlinx.datetime.LocalDate, OrderSuggestion>,
+    itemTitles: Map<String, String>,
+    onDismissConflict: (Conflict) -> Unit,
+    onApplyOrder: (kotlinx.datetime.LocalDate, OrderSuggestion) -> Unit,
     modifier: Modifier,
 ) {
+    var reviewingOrder by remember { mutableStateOf<Pair<kotlinx.datetime.LocalDate, OrderSuggestion>?>(null) }
+    reviewingOrder?.let { (date, suggestion) ->
+        OrderSuggestionDialog(
+            suggestion = suggestion,
+            itemTitles = itemTitles,
+            onApply = { onApplyOrder(date, suggestion) },
+            onDismiss = { reviewingOrder = null },
+        )
+    }
     val listState = rememberLazyListState()
     // Índice na lista de cada cabeçalho de dia e de cada item, para ligar lista e mapa.
     val indexOfKey = remember(days) {
@@ -410,6 +441,13 @@ private fun ItineraryTab(
             days.forEach { day ->
                 item(key = "day:${day.date}") {
                     DayHeader(trip, day.date, isToday = day.date == today, onAdd = { onAddToDay(day.date) })
+                    DayNotices(
+                        conflicts = conflicts[day.date].orEmpty(),
+                        suggestion = orderSuggestions[day.date],
+                        itemTitles = itemTitles,
+                        onDismiss = onDismissConflict,
+                        onSuggestion = { orderSuggestions[day.date]?.let { reviewingOrder = day.date to it } },
+                    )
                 }
                 if (day.items.isEmpty()) {
                     item(key = "empty:${day.date}") {
@@ -421,7 +459,8 @@ private fun ItineraryTab(
                         )
                     }
                 }
-                items(day.items, key = { it.key }) { item ->
+                itemsIndexed(day.items, key = { _, it -> it.key }) { index, item ->
+                    if (index > 0) WalkConnector(previous = day.items[index - 1], current = item)
                     when (item) {
                         is AgendaItem.ActivityItem -> AgendaItemRow(
                             item = item,

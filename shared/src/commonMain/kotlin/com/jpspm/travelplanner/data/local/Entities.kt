@@ -228,3 +228,23 @@ data class ChecklistItemEntity(
     val createdAt: Long,
     val updatedAt: Long,
 )
+
+/** Ideia da viagem: algo que quero fazer, ainda sem dia (RF-36). Versão 5. */
+@Serializable
+@Entity(
+    tableName = "ideas",
+    foreignKeys = [
+        ForeignKey(entity = TripEntity::class, parentColumns = ["id"], childColumns = ["tripId"], onDelete = ForeignKey.CASCADE),
+        ForeignKey(entity = PlaceEntity::class, parentColumns = ["id"], childColumns = ["placeId"], onDelete = ForeignKey.SET_NULL),
+    ],
+    indices = [Index("tripId"), Index("placeId")],
+)
+data class IdeaEntity(
+    @PrimaryKey val id: String,
+    val tripId: String,
+    val title: String,
+    val notes: String,
+    val placeId: String?,
+    val createdAt: Long,
+    val updatedAt: Long,
+)

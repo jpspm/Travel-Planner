@@ -5,6 +5,8 @@ import com.jpspm.travelplanner.data.export.HtmlExporter
 import com.jpspm.travelplanner.data.files.FileStore
 import com.jpspm.travelplanner.ui.trip.BudgetViewModel
 import com.jpspm.travelplanner.ui.trip.ChecklistViewModel
+import com.jpspm.travelplanner.ui.trip.IdeasViewModel
+import com.jpspm.travelplanner.ui.editors.IdeaEditorViewModel
 import com.jpspm.travelplanner.ui.trip.HtmlExportViewModel
 import com.jpspm.travelplanner.data.settings.SettingsStore
 import com.jpspm.travelplanner.domain.repository.BackupRepository
@@ -18,6 +20,8 @@ import io.ktor.client.HttpClient
 import com.jpspm.travelplanner.data.repository.LocalActivityRepository
 import com.jpspm.travelplanner.data.repository.LocalBudgetRepository
 import com.jpspm.travelplanner.data.repository.LocalChecklistRepository
+import com.jpspm.travelplanner.data.repository.LocalIdeaRepository
+import com.jpspm.travelplanner.domain.repository.IdeaRepository
 import com.jpspm.travelplanner.domain.repository.BudgetRepository
 import com.jpspm.travelplanner.domain.repository.ChecklistRepository
 import com.jpspm.travelplanner.data.repository.LocalMapSnapshotRepository
@@ -59,13 +63,14 @@ val dataModule = module {
     single<MapSnapshotRepository> { LocalMapSnapshotRepository(get(), get(), get()) }
     single<BudgetRepository> { LocalBudgetRepository(get(), get()) }
     single<ChecklistRepository> { LocalChecklistRepository(get(), get()) }
+    single<IdeaRepository> { LocalIdeaRepository(get(), get(), get(), get()) }
     single { HtmlExporter(get(), get(), get(), get(), get(), get()) }
 }
 
 val uiModule = module {
     viewModel { TripsViewModel(get(), get(), get(), get(), get()) }
     viewModel { params -> TripEditorViewModel(params.getOrNull(), get()) }
-    viewModel { params -> TripDetailViewModel(params.get(), get(), get(), get(), get(), get()) }
+    viewModel { params -> TripDetailViewModel(params.get(), get(), get(), get(), get(), get(), get()) }
     viewModel { params -> DestinationEditorViewModel(params[0], params.values.getOrNull(1) as String?, get(), get()) }
     viewModel { params ->
         ActivityEditorViewModel(params[0], params.values.getOrNull(1) as String?, params.values.getOrNull(2) as String?, get(), get())
@@ -83,6 +88,8 @@ val uiModule = module {
     viewModel { HtmlExportViewModel(get()) }
     viewModel { params -> BudgetViewModel(params.get(), get(), get(), get()) }
     viewModel { params -> ChecklistViewModel(params.get(), get()) }
+    viewModel { params -> IdeasViewModel(params.get(), get(), get()) }
+    viewModel { params -> IdeaEditorViewModel(params[0], params.values.getOrNull(1) as String?, get(), get()) }
 }
 
 /** [platformModule] fornece o [com.jpspm.travelplanner.data.local.AppDatabase] da plataforma. */

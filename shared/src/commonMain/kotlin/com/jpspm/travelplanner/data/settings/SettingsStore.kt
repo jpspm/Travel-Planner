@@ -26,6 +26,8 @@ data class AppSettings(
     val lastBackupAt: Long? = null,
     /** Lembrete adiado pelo usuário até este instante (epoch ms). */
     val backupReminderSnoozedUntil: Long? = null,
+    /** Avisos de conflito dispensados pelo usuário, como `<tripId>:<chave do conflito>` (RNF-26). */
+    val dismissedConflicts: Set<String> = emptySet(),
 )
 
 class SettingsStore(private val root: () -> PlatformFile = { FileKit.filesDir }) {

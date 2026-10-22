@@ -32,6 +32,7 @@ interface TripDao {
           UNION ALL SELECT MAX(updatedAt) FROM expenses
           UNION ALL SELECT MAX(updatedAt) FROM category_budgets
           UNION ALL SELECT MAX(updatedAt) FROM checklist_items
+          UNION ALL SELECT MAX(updatedAt) FROM ideas
         )
         """
     )
@@ -67,6 +68,7 @@ interface PlaceDao {
           AND id NOT IN (SELECT placeId FROM destinations WHERE placeId IS NOT NULL)
           AND id NOT IN (SELECT placeId FROM activities WHERE placeId IS NOT NULL)
           AND id NOT IN (SELECT placeId FROM reservations WHERE placeId IS NOT NULL)
+          AND id NOT IN (SELECT placeId FROM ideas WHERE placeId IS NOT NULL)
         """
     )
     suspend fun getUnused(tripId: String): List<PlaceEntity>
@@ -78,6 +80,7 @@ interface PlaceDao {
           AND id NOT IN (SELECT placeId FROM destinations WHERE placeId IS NOT NULL)
           AND id NOT IN (SELECT placeId FROM activities WHERE placeId IS NOT NULL)
           AND id NOT IN (SELECT placeId FROM reservations WHERE placeId IS NOT NULL)
+          AND id NOT IN (SELECT placeId FROM ideas WHERE placeId IS NOT NULL)
         """
     )
     suspend fun deleteUnused(tripId: String)
@@ -258,5 +261,23 @@ interface ChecklistDao {
     suspend fun upsert(item: ChecklistItemEntity)
 
     @Query("DELETE FROM checklist_items WHERE id = :id")
+    suspend fun delete(id: String)
+}
+
+@Dao
+interface IdeaDao {
+    @Query("SELECT * FROM ideas WHERE tripId = :tripId ORDER BY createdAt ASC")
+    fun observeByTrip(tripId: String): Flow<List<IdeaEntity>>
+
+    @Query("SELECT * FROM ideas WHERE tripId = :tripId")
+    suspend fun getByTrip(tripId: String): List<IdeaEntity>
+
+    @Query("SELECT * FROM ideas WHERE id = :id")
+    suspend fun get(id: String): IdeaEntity?
+
+    @Upsert
+    suspend fun upsert(idea: IdeaEntity)
+
+    @Query("DELETE FROM ideas WHERE id = :id")
     suspend fun delete(id: String)
 }
