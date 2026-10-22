@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Gerado por design/make_android_icon.py a partir de design/icon.svg. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <group android:translateX="14.850" android:translateY="19.200" android:scaleX="0.145" android:scaleY="0.145">
+        <path android:pathData="M268,132 H160 A28,28 0 0 0 132,160 V372 A28,28 0 0 0 160,400 H304 A28,28 0 0 0 332,372 V246" android:strokeColor="#FFFFFFFF" android:strokeWidth="20"
+            android:strokeLineCap="round" android:strokeLineJoin="round" />
+        <path android:pathData="M112,182 h40 M112,242 h40 M112,302 h40 M112,362 h40" android:strokeColor="#FFFFFFFF" android:strokeWidth="20"
+            android:strokeLineCap="round" android:strokeLineJoin="round" />
+        <path android:pathData="M196,214 h64 M196,266 h96 M196,318 h60" android:strokeColor="#FFFFFFFF" android:strokeWidth="20"
+            android:strokeLineCap="round" android:strokeLineJoin="round" />
+        <group android:translateX="368" android:translateY="148" android:rotation="45" android:scaleX="8.4" android:scaleY="8.4">
+            <group android:translateX="-11.5" android:translateY="-12">
+                <path android:pathData="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" android:fillColor="#FFFFFFFF" android:strokeColor="#FFFFFFFF"
+                    android:strokeWidth="0.8" android:strokeLineJoin="round" />
+            </group>
+        </group>
+    </group>
+</vector>

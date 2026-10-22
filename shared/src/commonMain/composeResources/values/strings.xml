@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Travel Planner</string>
+
+    <!-- Ações -->
+    <string name="action_back">Voltar</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_clear">Limpar</string>
+    <string name="action_close">Fechar</string>
+    <string name="action_delete">Excluir</string>
+    <string name="action_edit">Editar</string>
+    <string name="action_more">Mais opções</string>
+    <string name="action_ok">OK</string>
+    <string name="action_save">Salvar</string>
+
+    <!-- Erros de validação -->
+    <string name="error_required">Campo obrigatório</string>
+    <string name="error_end_before_start">Deve ser igual ou posterior ao início</string>
+    <string name="error_end_time_before_start">Termina antes de começar</string>
+    <string name="error_end_moment_before_start">O fim está antes do início (considerando os fusos).</string>
+    <string name="error_time_required">Informe o horário</string>
+    <string name="error_invalid_price">Valor inválido. Ex.: 1.234,56</string>
+
+    <!-- Lista de viagens -->
+    <string name="trips_new">Nova viagem</string>
+    <string name="trips_empty_title">Nenhuma viagem ainda</string>
+    <string name="trips_empty_message">Crie sua primeira viagem para reunir roteiro, reservas e passagens num lugar só.</string>
+    <string name="trips_section_ongoing">Em andamento</string>
+    <string name="trips_section_upcoming">Próximas</string>
+    <string name="trips_section_past">Passadas</string>
+    <plurals name="trip_days">
+        <item quantity="one">%1$d dia</item>
+        <item quantity="other">%1$d dias</item>
+    </plurals>
+
+    <!-- Hoje -->
+    <string name="today_title">Hoje · %1$s</string>
+    <string name="today_tickets">Ingressos e passagens de hoje</string>
+    <string name="today_next">Próximo</string>
+    <string name="today_nothing_next">Nada mais com horário hoje.</string>
+    <string name="today_open_trip">Ver roteiro completo</string>
+
+    <!-- Viagem -->
+    <string name="trip_new_title">Nova viagem</string>
+    <string name="trip_edit_title">Editar viagem</string>
+    <string name="trip_name">Nome da viagem</string>
+    <string name="trip_start_date">Início</string>
+    <string name="trip_end_date">Fim</string>
+    <string name="trip_notes">Notas</string>
+    <string name="trip_menu_edit">Editar viagem</string>
+    <string name="trip_menu_cover">Escolher foto de capa</string>
+    <string name="cover_places_header">Fotos dos lugares do roteiro:</string>
+    <string name="cover_no_place_photos">Os lugares do roteiro ainda não têm foto. Busque os lugares nas atividades para usar as fotos deles.</string>
+    <string name="cover_from_gallery">Escolher da galeria</string>
+    <string name="trip_menu_remove_cover">Remover foto de capa</string>
+    <string name="trip_menu_duplicate">Duplicar viagem</string>
+    <string name="trip_menu_delete">Excluir viagem</string>
+    <string name="trip_copy_suffix">(cópia)</string>
+    <string name="trip_delete_title">Excluir viagem?</string>
+    <string name="trip_delete_message">“%1$s” será excluída com destinos, roteiro, reservas e anexos. Isso não pode ser desfeito.</string>
+
+    <!-- Abas -->
+    <string name="tab_itinerary">Roteiro</string>
+    <string name="tab_reservations">Reservas</string>
+    <string name="tab_cities">Cidades</string>
+    <string name="fab_add">Adicionar</string>
+    <string name="add_on_date">Adicionar em %1$s</string>
+    <string name="add_activity">Atividade</string>
+    <string name="add_activity_hint">Passeio, visita, refeição sem reserva…</string>
+    <string name="add_reservation_header">Reserva</string>
+    <string name="fab_reservation">Reserva</string>
+    <string name="fab_city">Cidade</string>
+
+    <!-- Roteiro -->
+    <string name="itinerary_day_n">Dia %1$d</string>
+    <string name="itinerary_today">hoje</string>
+    <string name="itinerary_outside_trip">Fora do período</string>
+    <string name="itinerary_empty_day">Nada planejado.</string>
+    <string name="itinerary_add_to_day">Adicionar em %1$s</string>
+    <string name="agenda_no_time">Sem horário</string>
+    <string name="agenda_until">até %1$s</string>
+
+    <!-- Atividade -->
+    <string name="activity_new_title">Nova atividade</string>
+    <string name="activity_edit_title">Editar atividade</string>
+    <string name="activity_title">O que fazer</string>
+    <string name="activity_start_time">Início (opcional)</string>
+    <string name="activity_end_time">Fim (opcional)</string>
+    <string name="activity_move_up">Mover para cima</string>
+    <string name="activity_move_down">Mover para baixo</string>
+    <string name="activity_move_to_day">Mover para outro dia</string>
+    <string name="activity_delete_title">Excluir atividade?</string>
+    <string name="activity_delete_message">“%1$s” será removida do roteiro.</string>
+
+    <!-- Cidades -->
+    <string name="cities_empty_title">Nenhuma cidade ainda</string>
+    <string name="cities_empty_message">As cidades aparecem sozinhas quando você busca os lugares das atividades e reservas. Você também pode adicionar uma cidade.</string>
+    <string name="city_lodging">Hospedagem: %1$s</string>
+    <string name="city_auto">detectada pelos lugares</string>
+    <string name="city_no_items">Nada planejado nesta cidade ainda.</string>
+    <plurals name="city_nights">
+        <item quantity="one">%1$d noite</item>
+        <item quantity="other">%1$d noites</item>
+    </plurals>
+    <plurals name="city_activities">
+        <item quantity="one">%1$d atividade</item>
+        <item quantity="other">%1$d atividades</item>
+    </plurals>
+    <plurals name="city_reservations">
+        <item quantity="one">%1$d reserva</item>
+        <item quantity="other">%1$d reservas</item>
+    </plurals>
+
+    <!-- Destino (cidade cadastrada) -->
+    <string name="destination_new_title">Nova cidade</string>
+    <string name="destination_edit_title">Editar cidade</string>
+    <string name="destination_name">Cidade</string>
+    <string name="destination_country">País</string>
+    <string name="destination_arrival">Chegada</string>
+    <string name="destination_departure">Saída</string>
+    <string name="destination_timezone_hint">O fuso da cidade é sugerido para as atividades e reservas desses dias. Lugares a até 40 km entram nesta cidade.</string>
+    <string name="destination_delete_title">Excluir cidade?</string>
+    <string name="destination_delete_message">“%1$s” será removido da viagem. Atividades e reservas continuam.</string>
+
+    <!-- Campos comuns -->
+    <string name="field_date">Data</string>
+    <string name="field_time">Hora</string>
+    <string name="field_timezone">Fuso horário</string>
+    <string name="field_notes">Notas</string>
+    <string name="field_title">Título</string>
+    <string name="field_place">Local</string>
+    <string name="field_place_name">Nome do local</string>
+    <string name="field_address">Endereço</string>
+    <string name="field_code">Código da reserva</string>
+    <string name="field_locator">Localizador</string>
+    <string name="field_price">Valor pago (R$)</string>
+    <string name="section_place">Local</string>
+    <string name="section_details">Detalhes</string>
+    <string name="section_payment">Pagamento</string>
+    <string name="section_attachments">Anexos</string>
+
+    <!-- Fuso -->
+    <string name="timezone_dialog_title">Fuso horário</string>
+    <string name="timezone_search">Buscar (ex.: Rome, Sao Paulo)</string>
+    <string name="timezone_suggested">Sugeridos</string>
+
+    <!-- Reservas -->
+    <string name="reservation_pick_type">Tipo de reserva</string>
+    <string name="reservation_new_title">Nova reserva · %1$s</string>
+    <string name="reservation_edit_title">Editar · %1$s</string>
+    <string name="reservation_no_date">Sem data</string>
+    <string name="reservation_delete_title">Excluir reserva?</string>
+    <string name="reservation_delete_message">“%1$s” será excluída junto com os anexos.</string>
+    <string name="reservations_empty_title">Nenhuma reserva</string>
+    <string name="reservations_empty_message">Cadastre voos, hospedagens, ingressos e outras reservas. Elas aparecem sozinhas no roteiro.</string>
+    <string name="reservation_type_flight">Voo</string>
+    <string name="reservation_type_lodging">Hospedagem</string>
+    <string name="reservation_type_event">Ingresso / Evento</string>
+    <string name="reservation_type_train_bus">Trem / Ônibus</string>
+    <string name="reservation_type_car_rental">Aluguel de carro</string>
+    <string name="reservation_type_restaurant">Restaurante</string>
+    <string name="reservation_type_other">Outro</string>
+
+    <!-- Momentos da reserva -->
+    <string name="moment_departure">Partida</string>
+    <string name="moment_arrival">Chegada</string>
+    <string name="moment_check_in">Check-in</string>
+    <string name="moment_check_out">Check-out</string>
+    <string name="moment_pickup">Retirada</string>
+    <string name="moment_dropoff">Devolução</string>
+    <string name="moment_date_time">Data e hora</string>
+    <string name="moment_end">Fim</string>
+
+    <!-- Campos por tipo de reserva -->
+    <string name="field_lodging_name">Nome da hospedagem</string>
+    <string name="field_event_name">Evento ou atração</string>
+    <string name="field_restaurant_name">Nome do restaurante</string>
+    <string name="field_airline">Companhia aérea</string>
+    <string name="field_flight_number">Nº do voo</string>
+    <string name="field_origin">Origem</string>
+    <string name="field_destination">Destino</string>
+    <string name="field_terminal">Terminal</string>
+    <string name="field_gate">Portão</string>
+    <string name="field_seat">Assento</string>
+    <string name="field_baggage">Bagagem</string>
+    <string name="field_room_type">Tipo de quarto</string>
+    <string name="field_contact">Contato</string>
+    <string name="field_sector_seat">Setor / assento</string>
+    <string name="field_company">Empresa</string>
+    <string name="field_service_number">Número</string>
+    <string name="field_seat_coach">Assento / vagão</string>
+    <string name="field_pickup_location">Local de retirada</string>
+    <string name="field_dropoff_location">Local de devolução</string>
+    <string name="field_car_category">Categoria</string>
+    <string name="field_people">Nº de pessoas</string>
+
+    <!-- Busca de lugares -->
+    <string name="place_search_title">Buscar lugar</string>
+    <string name="place_search_hint">Ex.: Coliseu, MASP, Torre Eiffel</string>
+    <string name="place_search_button">Buscar lugar</string>
+    <string name="place_search_on_map">Buscar no mapa</string>
+    <string name="place_search_full">Buscar “%1$s” (inclui nomes em português)</string>
+    <string name="place_search_empty">Nenhum lugar encontrado. Tente outro nome ou digite à mão.</string>
+    <string name="place_search_offline">Sem conexão com a busca. Você pode digitar o lugar à mão.</string>
+    <string name="place_manual">Digitar à mão</string>
+    <string name="place_change">Trocar</string>
+    <string name="place_remove">Remover</string>
+    <string name="place_use_this">Usar este lugar</string>
+    <string name="place_use_gallery_photo">Usar este lugar com foto da galeria</string>
+    <string name="place_back_to_results">Voltar aos resultados</string>
+    <string name="place_no_photo">Sem foto na Wikimedia para este lugar. Você pode escolher uma da galeria.</string>
+    <string name="place_photo_credit">Foto: %1$s · Wikimedia Commons</string>
+    <string name="place_open_in_maps">Abrir no app de mapas</string>
+    <string name="destination_search">Buscar cidade</string>
+
+    <!-- Mapa do roteiro -->
+    <string name="map_title_day">Mapa · %1$s</string>
+    <string name="map_title_trip">Mapa · viagem inteira</string>
+    <string name="map_day">Dia</string>
+    <string name="map_trip">Viagem</string>
+    <string name="map_expand">Mostrar mapa</string>
+    <string name="map_collapse">Esconder mapa</string>
+    <string name="map_empty">Nenhum lugar com localização neste dia.</string>
+    <string name="map_offline_image">Imagem salva do mapa</string>
+    <string name="map_offline_saved">Sem internet: mostrando a imagem salva do mapa.</string>
+    <string name="map_offline_none">Sem internet e ainda sem imagem salva deste mapa. Abra a viagem com internet uma vez para salvar.</string>
+    <string name="map_hint_no_places">Busque o lugar nas atividades e reservas para vê-las no mapa.</string>
+
+    <!-- Anexos -->
+    <string name="attachments_empty">Adicione o QR code, o print do ingresso, a passagem em PDF ou uma foto.</string>
+    <string name="attachment_add">Adicionar anexo</string>
+    <string name="attachment_adding">Adicionando…</string>
+    <string name="attachment_add_image">Imagem ou print da galeria</string>
+    <string name="attachment_add_camera">Tirar foto</string>
+    <string name="attachment_add_pdf">Arquivo PDF</string>
+    <string name="attachment_kind_qr">Imagem</string>
+    <string name="attachment_kind_photo">Foto</string>
+    <string name="attachment_kind_pdf">PDF</string>
+    <string name="attachment_open">Abrir %1$s</string>
+    <string name="attachment_delete_title">Excluir anexo?</string>
+    <string name="attachment_delete_message">“%1$s” será apagado do aparelho.</string>
+    <plurals name="attachments_count">
+        <item quantity="one">%1$d anexo</item>
+        <item quantity="other">%1$d anexos</item>
+    </plurals>
+
+    <!-- Backup -->
+    <string name="backup_export_all">Exportar backup (todas as viagens)</string>
+    <string name="backup_export_trip">Exportar backup desta viagem</string>
+    <string name="backup_import">Importar backup</string>
+    <string name="backup_exporting">Gerando backup…</string>
+    <string name="backup_importing">Lendo backup…</string>
+    <string name="backup_ready_title">Backup pronto</string>
+    <string name="backup_ready_message">Arquivo de %1$s. Guarde fora do celular (Google Drive, e-mail, computador) para não perder as viagens se trocar ou perder o aparelho.</string>
+    <string name="backup_save">Salvar arquivo</string>
+    <string name="backup_share">Compartilhar (Drive, e-mail…)</string>
+    <string name="backup_import_title">Importar backup</string>
+    <string name="backup_import_from">Backup de %1$s às %2$s com:</string>
+    <string name="backup_import_modes">Mesclar junta com o que já está no aparelho (vale a versão alterada por último). Substituir apaga as viagens atuais.</string>
+    <string name="backup_merge">Mesclar</string>
+    <string name="backup_replace">Substituir tudo</string>
+    <string name="backup_replace_confirm_title">Substituir tudo?</string>
+    <string name="backup_replace_confirm_message">Todas as viagens deste aparelho, com anexos e fotos, serão apagadas e trocadas pelas do backup. Isso não pode ser desfeito.</string>
+    <string name="backup_imported_title">Backup importado</string>
+    <plurals name="backup_imported_message">
+        <item quantity="one">%1$d viagem importada.</item>
+        <item quantity="other">%1$d viagens importadas.</item>
+    </plurals>
+    <string name="backup_failed_title">Não foi possível concluir</string>
+    <string name="backup_reminder_title">Faça um backup</string>
+    <string name="backup_reminder_message">Suas viagens ficam só neste aparelho. Exporte um backup para não perder roteiro, reservas e anexos.</string>
+    <string name="backup_reminder_action">Fazer backup</string>
+    <string name="backup_reminder_later">Depois</string>
+    <string name="trip_menu_storage">Espaço usado</string>
+    <string name="trip_storage_message">Fotos e anexos desta viagem ocupam %1$s no aparelho.</string>
+    <string name="trip_storage_loading">Calculando…</string>
+</resources>
