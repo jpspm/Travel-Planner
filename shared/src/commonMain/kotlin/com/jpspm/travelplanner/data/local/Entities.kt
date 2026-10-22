@@ -173,3 +173,58 @@ data class MapSnapshotEntity(
     val createdAt: Long,
     val updatedAt: Long,
 )
+
+/** Gasto avulso da viagem (RF-23). Valores de reservas não entram aqui: contam direto da reserva. Versão 4. */
+@Serializable
+@Entity(
+    tableName = "expenses",
+    foreignKeys = [
+        ForeignKey(entity = TripEntity::class, parentColumns = ["id"], childColumns = ["tripId"], onDelete = ForeignKey.CASCADE),
+    ],
+    indices = [Index("tripId")],
+)
+data class ExpenseEntity(
+    @PrimaryKey val id: String,
+    val tripId: String,
+    val amountCents: Long,
+    val category: String,
+    val date: String,
+    val description: String,
+    val createdAt: Long,
+    val updatedAt: Long,
+)
+
+/** Orçamento planejado por categoria (RF-22). O total fica em `trips.budgetTotalCents`. Versão 4. */
+@Serializable
+@Entity(
+    tableName = "category_budgets",
+    primaryKeys = ["tripId", "category"],
+    foreignKeys = [
+        ForeignKey(entity = TripEntity::class, parentColumns = ["id"], childColumns = ["tripId"], onDelete = ForeignKey.CASCADE),
+    ],
+)
+data class CategoryBudgetEntity(
+    val tripId: String,
+    val category: String,
+    val amountCents: Long,
+    val updatedAt: Long,
+)
+
+/** Item do checklist pré-viagem (RF-26). Versão 4. */
+@Serializable
+@Entity(
+    tableName = "checklist_items",
+    foreignKeys = [
+        ForeignKey(entity = TripEntity::class, parentColumns = ["id"], childColumns = ["tripId"], onDelete = ForeignKey.CASCADE),
+    ],
+    indices = [Index("tripId")],
+)
+data class ChecklistItemEntity(
+    @PrimaryKey val id: String,
+    val tripId: String,
+    val text: String,
+    val done: Boolean,
+    val sortOrder: Int,
+    val createdAt: Long,
+    val updatedAt: Long,
+)

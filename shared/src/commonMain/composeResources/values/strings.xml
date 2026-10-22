@@ -53,6 +53,7 @@
     <string name="cover_no_place_photos">Os lugares do roteiro ainda não têm foto. Busque os lugares nas atividades para usar as fotos deles.</string>
     <string name="cover_from_gallery">Escolher da galeria</string>
     <string name="trip_menu_remove_cover">Remover foto de capa</string>
+    <string name="trip_menu_share_html">Compartilhar roteiro (HTML)</string>
     <string name="trip_menu_duplicate">Duplicar viagem</string>
     <string name="trip_menu_delete">Excluir viagem</string>
     <string name="trip_copy_suffix">(cópia)</string>
@@ -62,7 +63,10 @@
     <!-- Abas -->
     <string name="tab_itinerary">Roteiro</string>
     <string name="tab_reservations">Reservas</string>
+    <string name="tab_summary">Resumo</string>
     <string name="tab_cities">Cidades</string>
+    <string name="tab_budget">Gastos</string>
+    <string name="tab_checklist">Checklist</string>
     <string name="fab_add">Adicionar</string>
     <string name="add_on_date">Adicionar em %1$s</string>
     <string name="add_activity">Atividade</string>
@@ -70,6 +74,7 @@
     <string name="add_reservation_header">Reserva</string>
     <string name="fab_reservation">Reserva</string>
     <string name="fab_city">Cidade</string>
+    <string name="fab_expense">Gasto</string>
 
     <!-- Roteiro -->
     <string name="itinerary_day_n">Dia %1$d</string>
@@ -274,4 +279,69 @@
     <string name="trip_menu_storage">Espaço usado</string>
     <string name="trip_storage_message">Fotos e anexos desta viagem ocupam %1$s no aparelho.</string>
     <string name="trip_storage_loading">Calculando…</string>
+
+    <!-- Orçamento e gastos -->
+    <string name="category_transport">Transporte</string>
+    <string name="category_lodging">Hospedagem</string>
+    <string name="category_food">Alimentação</string>
+    <string name="category_activities">Passeios e ingressos</string>
+    <string name="category_shopping">Compras</string>
+    <string name="category_other">Outros</string>
+    <string name="budget_spent">Gasto até agora</string>
+    <string name="budget_remaining">Restam %1$s de %2$s planejados</string>
+    <string name="budget_over">%1$s acima dos %2$s planejados</string>
+    <string name="budget_no_plan">Sem orçamento definido.</string>
+    <string name="budget_set">Definir orçamento</string>
+    <string name="budget_edit">Editar orçamento</string>
+    <string name="budget_by_category">Por categoria</string>
+    <string name="budget_expenses">Gastos</string>
+    <string name="budget_from_reservation">Reserva</string>
+    <string name="budget_empty_title">Nenhum gasto ainda</string>
+    <string name="budget_empty_message">Adicione gastos avulsos. Reservas com valor pago entram aqui sozinhas.</string>
+    <string name="budget_dialog_title">Orçamento</string>
+    <string name="budget_total">Total planejado (R$)</string>
+    <string name="budget_categories_hint">Opcional: quanto planeja gastar em cada categoria. Sem total, vale a soma das categorias.</string>
+    <string name="expense_new">Novo gasto</string>
+    <string name="expense_edit">Editar gasto</string>
+    <string name="expense_amount">Valor (R$)</string>
+    <string name="expense_description">Descrição</string>
+    <string name="expense_delete_title">Excluir gasto?</string>
+    <string name="expense_delete_message">O gasto de %1$s será removido.</string>
+
+    <!-- Checklist -->
+    <string name="checklist_empty_title">Checklist vazio</string>
+    <string name="checklist_empty_message">Liste o que precisa resolver antes de viajar.</string>
+    <string name="checklist_add_suggestions">Começar com sugestões</string>
+    <string name="checklist_progress">%1$d de %2$d feitos</string>
+    <string name="checklist_new_item">Novo item</string>
+    <string name="checklist_add">Adicionar item</string>
+    <string name="checklist_rename">Editar item</string>
+    <string name="checklist_suggestion_insurance">Contratar seguro viagem</string>
+    <string name="checklist_suggestion_documents">Separar passaporte/RG e conferir a validade</string>
+    <string name="checklist_suggestion_bank">Avisar o banco e conferir o cartão no exterior</string>
+    <string name="checklist_suggestion_sim">Chip ou eSIM de dados</string>
+    <string name="checklist_suggestion_adapter">Adaptador de tomada</string>
+    <string name="checklist_suggestion_checkin">Fazer o check-in online do voo</string>
+    <string name="checklist_suggestion_offline">Abrir a viagem com internet para salvar os mapas offline</string>
+    <string name="checklist_suggestion_backup">Exportar um backup da viagem</string>
+
+    <!-- Resumo (viagens passadas) -->
+    <string name="summary_days">dias</string>
+    <string name="summary_cities">Cidades</string>
+    <string name="summary_places">lugares</string>
+    <string name="summary_activities">atividades</string>
+    <string name="summary_reservations">reservas</string>
+    <string name="summary_spent">gastos</string>
+    <string name="summary_spent_of">gastos de %1$s</string>
+    <string name="summary_photos">Fotos dos lugares</string>
+    <string name="summary_share_html">Compartilhar roteiro (HTML)</string>
+
+    <!-- Exportação HTML -->
+    <string name="html_trip_map_alt">Mapa da viagem</string>
+    <string name="html_day_map_alt">Mapa do dia</string>
+    <string name="html_credits_title">Créditos</string>
+    <string name="html_photo_credit">Foto de %1$s: %2$s</string>
+    <string name="html_map_credit">Mapas: © OpenStreetMap contributors · OpenFreeMap · OpenMapTiles</string>
+    <string name="html_generated_by">Gerado pelo Travel Planner em %1$s.</string>
+    <string name="html_export_failed">Não foi possível gerar o roteiro em HTML.</string>
 </resources>

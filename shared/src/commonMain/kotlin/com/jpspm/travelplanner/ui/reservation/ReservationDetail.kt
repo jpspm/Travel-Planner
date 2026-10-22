@@ -17,6 +17,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.ui.platform.LocalUriHandler
+import com.jpspm.travelplanner.platform.externalMapUri
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -160,6 +163,15 @@ fun ReservationDetailScreen(
                 title = { Text(stringResource(reservation.type.label)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
+                    // Abre o hotel, restaurante ou evento no app de mapas do aparelho (RF-16).
+                    reservation.place?.takeIf { it.hasPosition }?.let { place ->
+                        val uriHandler = LocalUriHandler.current
+                        IconButton(onClick = {
+                            runCatching { uriHandler.openUri(externalMapUri(place.latitude!!, place.longitude!!, place.name)) }
+                        }) {
+                            Icon(Icons.Default.Place, contentDescription = stringResource(Res.string.place_open_in_maps))
+                        }
+                    }
                     IconButton(onClick = { onEdit(reservation.tripId) }) {
                         Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.action_edit))
                     }

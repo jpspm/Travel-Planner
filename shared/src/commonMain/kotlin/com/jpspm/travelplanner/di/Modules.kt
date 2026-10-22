@@ -1,7 +1,11 @@
 package com.jpspm.travelplanner.di
 
 import com.jpspm.travelplanner.data.backup.LocalBackupRepository
+import com.jpspm.travelplanner.data.export.HtmlExporter
 import com.jpspm.travelplanner.data.files.FileStore
+import com.jpspm.travelplanner.ui.trip.BudgetViewModel
+import com.jpspm.travelplanner.ui.trip.ChecklistViewModel
+import com.jpspm.travelplanner.ui.trip.HtmlExportViewModel
 import com.jpspm.travelplanner.data.settings.SettingsStore
 import com.jpspm.travelplanner.domain.repository.BackupRepository
 import com.jpspm.travelplanner.ui.backup.BackupViewModel
@@ -12,6 +16,10 @@ import com.jpspm.travelplanner.domain.repository.PlaceSearch
 import com.jpspm.travelplanner.ui.place.PlacePickerViewModel
 import io.ktor.client.HttpClient
 import com.jpspm.travelplanner.data.repository.LocalActivityRepository
+import com.jpspm.travelplanner.data.repository.LocalBudgetRepository
+import com.jpspm.travelplanner.data.repository.LocalChecklistRepository
+import com.jpspm.travelplanner.domain.repository.BudgetRepository
+import com.jpspm.travelplanner.domain.repository.ChecklistRepository
 import com.jpspm.travelplanner.data.repository.LocalMapSnapshotRepository
 import com.jpspm.travelplanner.domain.repository.MapSnapshotRepository
 import com.jpspm.travelplanner.data.repository.LocalDestinationRepository
@@ -49,6 +57,9 @@ val dataModule = module {
     single<ActivityRepository> { LocalActivityRepository(get(), get(), get(), get()) }
     single<ReservationRepository> { LocalReservationRepository(get(), get(), get(), get()) }
     single<MapSnapshotRepository> { LocalMapSnapshotRepository(get(), get(), get()) }
+    single<BudgetRepository> { LocalBudgetRepository(get(), get()) }
+    single<ChecklistRepository> { LocalChecklistRepository(get(), get()) }
+    single { HtmlExporter(get(), get(), get(), get(), get(), get()) }
 }
 
 val uiModule = module {
@@ -69,6 +80,9 @@ val uiModule = module {
     viewModel { params -> AttachmentViewerViewModel(params.get(), get()) }
     viewModel { PlacePickerViewModel(get()) }
     viewModel { BackupViewModel(get()) }
+    viewModel { HtmlExportViewModel(get()) }
+    viewModel { params -> BudgetViewModel(params.get(), get(), get(), get()) }
+    viewModel { params -> ChecklistViewModel(params.get(), get()) }
 }
 
 /** [platformModule] fornece o [com.jpspm.travelplanner.data.local.AppDatabase] da plataforma. */

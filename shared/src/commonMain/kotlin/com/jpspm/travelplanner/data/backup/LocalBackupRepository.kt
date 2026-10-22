@@ -6,7 +6,10 @@ import com.jpspm.travelplanner.data.files.FileStore
 import com.jpspm.travelplanner.data.local.ActivityEntity
 import com.jpspm.travelplanner.data.local.AppDatabase
 import com.jpspm.travelplanner.data.local.AttachmentEntity
+import com.jpspm.travelplanner.data.local.CategoryBudgetEntity
+import com.jpspm.travelplanner.data.local.ChecklistItemEntity
 import com.jpspm.travelplanner.data.local.DestinationEntity
+import com.jpspm.travelplanner.data.local.ExpenseEntity
 import com.jpspm.travelplanner.data.local.MapSnapshotEntity
 import com.jpspm.travelplanner.data.local.PlaceEntity
 import com.jpspm.travelplanner.data.local.ReservationEntity
@@ -59,6 +62,10 @@ data class BackupData(
     val attachments: List<AttachmentEntity> = emptyList(),
     /** Imagens estáticas do mapa (desde a versão 3 do banco; backups antigos não têm). */
     val mapSnapshots: List<MapSnapshotEntity> = emptyList(),
+    /** Gastos, orçamento por categoria e checklist (desde a versão 4 do banco). */
+    val expenses: List<ExpenseEntity> = emptyList(),
+    val categoryBudgets: List<CategoryBudgetEntity> = emptyList(),
+    val checklist: List<ChecklistItemEntity> = emptyList(),
 )
 
 class LocalBackupRepository(
@@ -83,6 +90,9 @@ class LocalBackupRepository(
             reservations = ids.flatMap { db.reservationDao().getByTrip(it) },
             attachments = ids.flatMap { db.attachmentDao().getByTrip(it) },
             mapSnapshots = ids.flatMap { db.mapSnapshotDao().getByTrip(it) },
+            expenses = ids.flatMap { db.expenseDao().getByTrip(it) },
+            categoryBudgets = ids.flatMap { db.categoryBudgetDao().getByTrip(it) },
+            checklist = ids.flatMap { db.checklistDao().getByTrip(it) },
         )
         val now = clock.now()
         val manifest = BackupManifest(BACKUP_SCHEMA_VERSION, APP_VERSION, now.toEpochMilliseconds(), ids)
@@ -131,6 +141,9 @@ class LocalBackupRepository(
                 data.reservations.forEach { e -> if (newer(e.updatedAt, db.reservationDao().get(e.id)?.updatedAt)) db.reservationDao().upsert(e) }
                 data.attachments.forEach { e -> if (newer(e.updatedAt, db.attachmentDao().get(e.id)?.updatedAt)) db.attachmentDao().upsert(e) }
                 data.mapSnapshots.forEach { e -> if (newer(e.updatedAt, db.mapSnapshotDao().get(e.id)?.updatedAt)) db.mapSnapshotDao().upsert(e) }
+                data.expenses.forEach { e -> if (newer(e.updatedAt, db.expenseDao().get(e.id)?.updatedAt)) db.expenseDao().upsert(e) }
+                data.categoryBudgets.forEach { e -> if (newer(e.updatedAt, db.categoryBudgetDao().get(e.tripId, e.category)?.updatedAt)) db.categoryBudgetDao().upsert(e) }
+                data.checklist.forEach { e -> if (newer(e.updatedAt, db.checklistDao().get(e.id)?.updatedAt)) db.checklistDao().upsert(e) }
             }
         }
         return data.trips.size

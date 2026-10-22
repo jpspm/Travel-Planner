@@ -29,6 +29,9 @@ interface TripDao {
           UNION ALL SELECT MAX(updatedAt) FROM activities
           UNION ALL SELECT MAX(updatedAt) FROM reservations
           UNION ALL SELECT MAX(updatedAt) FROM attachments
+          UNION ALL SELECT MAX(updatedAt) FROM expenses
+          UNION ALL SELECT MAX(updatedAt) FROM category_budgets
+          UNION ALL SELECT MAX(updatedAt) FROM checklist_items
         )
         """
     )
@@ -198,5 +201,62 @@ interface MapSnapshotDao {
     suspend fun upsert(snapshot: MapSnapshotEntity)
 
     @Query("DELETE FROM map_snapshots WHERE id = :id")
+    suspend fun delete(id: String)
+}
+
+@Dao
+interface ExpenseDao {
+    @Query("SELECT * FROM expenses WHERE tripId = :tripId ORDER BY date DESC, createdAt DESC")
+    fun observeByTrip(tripId: String): Flow<List<ExpenseEntity>>
+
+    @Query("SELECT * FROM expenses WHERE tripId = :tripId")
+    suspend fun getByTrip(tripId: String): List<ExpenseEntity>
+
+    @Query("SELECT * FROM expenses WHERE id = :id")
+    suspend fun get(id: String): ExpenseEntity?
+
+    @Upsert
+    suspend fun upsert(expense: ExpenseEntity)
+
+    @Query("DELETE FROM expenses WHERE id = :id")
+    suspend fun delete(id: String)
+}
+
+@Dao
+interface CategoryBudgetDao {
+    @Query("SELECT * FROM category_budgets WHERE tripId = :tripId")
+    fun observeByTrip(tripId: String): Flow<List<CategoryBudgetEntity>>
+
+    @Query("SELECT * FROM category_budgets WHERE tripId = :tripId")
+    suspend fun getByTrip(tripId: String): List<CategoryBudgetEntity>
+
+    @Query("SELECT * FROM category_budgets WHERE tripId = :tripId AND category = :category")
+    suspend fun get(tripId: String, category: String): CategoryBudgetEntity?
+
+    @Upsert
+    suspend fun upsert(budget: CategoryBudgetEntity)
+
+    @Query("DELETE FROM category_budgets WHERE tripId = :tripId")
+    suspend fun deleteByTrip(tripId: String)
+}
+
+@Dao
+interface ChecklistDao {
+    @Query("SELECT * FROM checklist_items WHERE tripId = :tripId ORDER BY sortOrder ASC")
+    fun observeByTrip(tripId: String): Flow<List<ChecklistItemEntity>>
+
+    @Query("SELECT * FROM checklist_items WHERE tripId = :tripId")
+    suspend fun getByTrip(tripId: String): List<ChecklistItemEntity>
+
+    @Query("SELECT * FROM checklist_items WHERE id = :id")
+    suspend fun get(id: String): ChecklistItemEntity?
+
+    @Query("SELECT COALESCE(MAX(sortOrder), -1) FROM checklist_items WHERE tripId = :tripId")
+    suspend fun maxSortOrder(tripId: String): Int
+
+    @Upsert
+    suspend fun upsert(item: ChecklistItemEntity)
+
+    @Query("DELETE FROM checklist_items WHERE id = :id")
     suspend fun delete(id: String)
 }

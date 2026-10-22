@@ -22,7 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -34,6 +34,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalUriHandler
 import com.jpspm.travelplanner.platform.externalMapUri
 import kotlinx.coroutines.launch
+import com.jpspm.travelplanner.domain.model.TripStatus
 import com.jpspm.travelplanner.domain.city.place
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Spacer
@@ -87,9 +88,13 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 private enum class TripTab(val label: org.jetbrains.compose.resources.StringResource) {
+    /** Só nas viagens passadas (RF-31). */
+    SUMMARY(Res.string.tab_summary),
     ITINERARY(Res.string.tab_itinerary),
     RESERVATIONS(Res.string.tab_reservations),
     CITIES(Res.string.tab_cities),
+    BUDGET(Res.string.tab_budget),
+    CHECKLIST(Res.string.tab_checklist),
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -113,7 +118,10 @@ fun TripDetailScreen(
     var choosingCover by remember { mutableStateOf(false) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val trip = state.trip
-    var tab by rememberSaveable { mutableStateOf(TripTab.ITINERARY) }
+    var tab by rememberSaveable { mutableStateOf<TripTab?>(null) }
+    var addingExpense by remember { mutableStateOf(false) }
+    val htmlExport: HtmlExportViewModel = koinViewModel()
+    HtmlExportEffects(htmlExport)
     var menuOpen by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
     var adding by remember { mutableStateOf<AddRequest?>(null) }
@@ -131,6 +139,12 @@ fun TripDetailScreen(
         return
     }
     StaticMapSync(tripId, trip.startDate, state.days)
+    val snapshotRepository = koinInject<MapSnapshotRepository>()
+    val snapshots by remember(tripId) { snapshotRepository.observe(tripId) }.collectAsStateWithLifecycle(emptyList())
+    // Viagem passada abre no Resumo (RF-31); as outras, no Roteiro.
+    val isPast = state.today?.let { trip.status(it) == TripStatus.PAST } == true
+    val tabs = if (isPast) TripTab.entries else TripTab.entries - TripTab.SUMMARY
+    val currentTab = tab?.takeIf { it in tabs } ?: tabs.first()
     val copySuffix = stringResource(Res.string.trip_copy_suffix)
 
     Scaffold(
@@ -175,6 +189,11 @@ fun TripDetailScreen(
                                 },
                             )
                             DropdownMenuItem(
+                                text = { Text(stringResource(Res.string.trip_menu_share_html)) },
+                                onClick = { menuOpen = false; htmlExport.export(tripId) },
+                                enabled = !htmlExport.exporting,
+                            )
+                            DropdownMenuItem(
                                 text = { Text(stringResource(Res.string.backup_export_trip)) },
                                 onClick = { menuOpen = false; backupViewModel.export(listOf(tripId)) },
                             )
@@ -189,31 +208,43 @@ fun TripDetailScreen(
                         }
                     },
                 )
-                PrimaryTabRow(selectedTabIndex = tab.ordinal) {
-                    TripTab.entries.forEach { t ->
-                        Tab(selected = tab == t, onClick = { tab = t }, text = { Text(stringResource(t.label)) })
+                PrimaryScrollableTabRow(selectedTabIndex = tabs.indexOf(currentTab), edgePadding = 8.dp) {
+                    tabs.forEach { t ->
+                        Tab(selected = currentTab == t, onClick = { tab = t }, text = { Text(stringResource(t.label)) })
                     }
                 }
             }
         },
         floatingActionButton = {
-            val (label, action) = when (tab) {
+            val fab: Pair<org.jetbrains.compose.resources.StringResource, () -> Unit>? = when (currentTab) {
                 TripTab.ITINERARY -> Res.string.fab_add to {
                     val date = itineraryDay ?: state.today?.takeIf { it in trip.startDate..trip.endDate } ?: trip.startDate
                     adding = AddRequest(date, includeActivity = true)
                 }
                 TripTab.RESERVATIONS -> Res.string.fab_reservation to { adding = AddRequest(null, includeActivity = false) }
                 TripTab.CITIES -> Res.string.fab_city to onNewDestination
+                TripTab.BUDGET -> Res.string.fab_expense to { addingExpense = true }
+                TripTab.SUMMARY, TripTab.CHECKLIST -> null
             }
-            ExtendedFloatingActionButton(
-                onClick = action,
-                icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text(stringResource(label)) },
-            )
+            fab?.let { (label, action) ->
+                ExtendedFloatingActionButton(
+                    onClick = action,
+                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                    text = { Text(stringResource(label)) },
+                )
+            }
         },
     ) { padding ->
         val modifier = Modifier.fillMaxSize().padding(padding)
-        when (tab) {
+        when (currentTab) {
+            TripTab.SUMMARY -> SummaryTab(
+                state = state,
+                snapshots = snapshots,
+                onOpenCity = onOpenCity,
+                onShareHtml = { htmlExport.export(tripId) },
+                exporting = htmlExport.exporting,
+                modifier = modifier,
+            )
             TripTab.ITINERARY -> ItineraryTab(
                 trip = trip,
                 days = state.days,
@@ -230,6 +261,14 @@ fun TripDetailScreen(
             )
             TripTab.RESERVATIONS -> ReservationsTab(state.reservations, state.zoneNames, onOpenReservation, modifier)
             TripTab.CITIES -> CitiesTab(state.cities, onOpen = { onOpenCity(it.key) }, modifier = modifier)
+            TripTab.BUDGET -> BudgetTab(
+                tripId = tripId,
+                onOpenReservation = onOpenReservation,
+                addingExpense = addingExpense,
+                onAddingExpenseChange = { addingExpense = it },
+                modifier = modifier,
+            )
+            TripTab.CHECKLIST -> ChecklistTab(tripId, modifier)
         }
     }
 
@@ -336,7 +375,8 @@ private fun ItineraryTab(
     var mapWholeTrip by rememberSaveable { mutableStateOf(false) }
     val mapped = remember(days) { mappedItems(days) }
     val online by koinInject<Connectivity>().online.collectAsStateWithLifecycle()
-    val snapshots by koinInject<MapSnapshotRepository>().observe(trip.id).collectAsStateWithLifecycle(emptyList())
+    val snapshotRepository = koinInject<MapSnapshotRepository>()
+    val snapshots by remember(trip.id) { snapshotRepository.observe(trip.id) }.collectAsStateWithLifecycle(emptyList())
     val scope = rememberCoroutineScope()
     val uriHandler = LocalUriHandler.current
 

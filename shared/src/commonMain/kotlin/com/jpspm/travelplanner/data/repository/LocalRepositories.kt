@@ -197,6 +197,9 @@ class LocalTripRepository(
         val activities = db.activityDao().getByTrip(id)
         val reservations = db.reservationDao().getByTrip(id)
         val attachments = db.attachmentDao().getByTrip(id).groupBy { it.reservationId }
+        // Checklist (desmarcado) e orçamento vão para a cópia; gastos não, pois são da viagem já feita.
+        val checklist = db.checklistDao().getByTrip(id)
+        val categoryBudgets = db.categoryBudgetDao().getByTrip(id)
 
         // Arquivos são copiados antes da transação; se ela falhar, as cópias são apagadas.
         val newCover = copyFile(trip.coverPhotoPath)
@@ -226,6 +229,8 @@ class LocalTripRepository(
                     })
                     newReservations.forEach { db.reservationDao().upsert(it) }
                     newAttachments.forEach { db.attachmentDao().upsert(it) }
+                    checklist.forEach { db.checklistDao().upsert(it.copy(id = newId(), tripId = newTripId, done = false, createdAt = now, updatedAt = now)) }
+                    categoryBudgets.forEach { db.categoryBudgetDao().upsert(it.copy(tripId = newTripId, updatedAt = now)) }
                 }
             }
         } catch (e: Exception) {
