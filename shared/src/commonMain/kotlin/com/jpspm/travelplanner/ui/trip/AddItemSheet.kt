@@ -23,6 +23,8 @@ import com.jpspm.travelplanner.domain.model.ReservationType
 import com.jpspm.travelplanner.resources.Res
 import com.jpspm.travelplanner.resources.add_activity
 import com.jpspm.travelplanner.resources.add_activity_hint
+import com.jpspm.travelplanner.resources.import_from_pdf
+import com.jpspm.travelplanner.resources.import_from_pdf_hint
 import com.jpspm.travelplanner.resources.add_on_date
 import com.jpspm.travelplanner.resources.add_reservation_header
 import com.jpspm.travelplanner.resources.reservation_pick_type
@@ -44,6 +46,8 @@ fun AddItemSheet(
     onDismiss: () -> Unit,
     /** Título no lugar do padrão (ex.: "Que tipo de ideia?"). */
     title: String? = null,
+    /** Mostra "Importar de um PDF" acima dos tipos de reserva (RF-50). */
+    onImportPdf: (() -> Unit)? = null,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.verticalScroll(rememberScrollState()).navigationBarsPadding().padding(bottom = 16.dp)) {
@@ -68,6 +72,15 @@ fun AddItemSheet(
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(start = 24.dp, top = 12.dp, bottom = 4.dp),
+                )
+            }
+            if (onImportPdf != null) {
+                ListItem(
+                    colors = colors,
+                    modifier = Modifier.clickable(onClick = onImportPdf),
+                    leadingContent = { Text("📄", style = MaterialTheme.typography.titleLarge) },
+                    headlineContent = { Text(stringResource(Res.string.import_from_pdf)) },
+                    supportingContent = { Text(stringResource(Res.string.import_from_pdf_hint)) },
                 )
             }
             ReservationType.entries.forEach { type ->

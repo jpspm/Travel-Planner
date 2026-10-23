@@ -409,12 +409,12 @@
     </plurals>
 
     <!-- Receber arquivos de outros apps (RF-44) -->
-    <string name="share_title">Anexar a qual reserva?</string>
+    <string name="share_title">Usar o arquivo em…</string>
     <plurals name="share_subtitle">
         <item quantity="one">%1$d arquivo: %2$s</item>
         <item quantity="other">%1$d arquivos: %2$s</item>
     </plurals>
-    <string name="share_no_reservations">Nenhuma reserva cadastrada. Crie a reserva primeiro e depois compartilhe o arquivo de novo.</string>
+    <string name="share_no_reservations">Nenhuma reserva cadastrada para anexar.</string>
     <!-- Moedas (RF-48) -->
     <string name="money_currency">Moeda</string>
     <string name="money_rate_loading">Buscando a cotação…</string>
@@ -443,4 +443,16 @@
     <string name="ics_export_failed">Não foi possível gerar o arquivo de calendário.</string>
     <!-- Tempo (RF-47) -->
     <string name="weather_credit">Previsão do tempo: Open-Meteo.com</string>
+    <!-- Importar reserva de PDF (RF-50) -->
+    <string name="import_done">📄 Preenchido a partir de “%1$s”. Confira os dados antes de salvar: a leitura é automática e pode errar.</string>
+    <string name="import_little">📄 Pouca coisa foi reconhecida em “%1$s”. O arquivo já está anexado; complete os dados.</string>
+    <string name="import_no_text">📄 Não consegui ler o texto de “%1$s” (pode ser uma imagem digitalizada). O arquivo já está anexado; preencha os dados.</string>
+    <string name="import_type">Tipo de reserva</string>
+    <string name="import_from_pdf">Importar de um PDF</string>
+    <string name="import_from_pdf_hint">Passagem, voucher ou confirmação: o app lê e preenche a reserva</string>
+    <string name="import_reading">Lendo o PDF…</string>
+    <string name="share_new_reservation">Criar reserva nova com o PDF</string>
+    <string name="share_new_reservation_hint">O app lê o PDF e preenche a reserva para você conferir.</string>
+    <string name="share_suggested_trip">Pelas datas do PDF</string>
+    <string name="share_attach_existing">Ou anexar a uma reserva existente</string>
 </resources>

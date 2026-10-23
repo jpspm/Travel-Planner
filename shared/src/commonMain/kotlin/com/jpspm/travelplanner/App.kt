@@ -111,6 +111,7 @@ fun App() {
                         onNewActivity = { date -> nav.navigate(ActivityEditorRoute(tripId, date = date)) },
                         onEditActivity = { nav.navigate(ActivityEditorRoute(tripId, activityId = it)) },
                         onNewReservation = { type, date -> nav.navigate(ReservationEditorRoute(tripId, type = type.name, date = date)) },
+                        onImportReservation = { nav.navigate(ReservationEditorRoute(tripId, fromImport = true)) },
                         onOpenReservation = { nav.navigate(ReservationDetailRoute(it)) },
                         onNewDestination = { nav.navigate(DestinationEditorRoute(tripId)) },
                         onOpenCity = { nav.navigate(CityRoute(tripId, it)) },
@@ -125,6 +126,9 @@ fun App() {
                 screen<ShareTargetRoute> {
                     ShareTargetScreen(
                         onDone = { id -> nav.navigate(ReservationDetailRoute(id)) { popUpTo<ShareTargetRoute> { inclusive = true } } },
+                        onCreateReservation = { tripId ->
+                            nav.navigate(ReservationEditorRoute(tripId, fromImport = true)) { popUpTo<ShareTargetRoute> { inclusive = true } }
+                        },
                         onCancel = nav::back,
                     )
                 }
@@ -160,6 +164,7 @@ fun App() {
                         tripId = route.tripId,
                         reservationId = route.reservationId,
                         type = route.type,
+                        fromImport = route.fromImport,
                         date = route.date,
                     ideaId = route.ideaId,
                         onBack = nav::back,

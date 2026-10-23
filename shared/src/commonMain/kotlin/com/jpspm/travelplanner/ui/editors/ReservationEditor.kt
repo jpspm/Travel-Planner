@@ -23,6 +23,20 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jpspm.travelplanner.core.money.Currency
+import com.jpspm.travelplanner.data.importing.ImportResult
+import com.jpspm.travelplanner.data.importing.ReservationImporter
+import com.jpspm.travelplanner.ui.components.emoji
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import com.jpspm.travelplanner.resources.import_done
+import com.jpspm.travelplanner.resources.import_little
+import com.jpspm.travelplanner.resources.import_no_text
+import com.jpspm.travelplanner.resources.import_type
+import com.jpspm.travelplanner.resources.import_reading
 import com.jpspm.travelplanner.core.money.Money
 import com.jpspm.travelplanner.core.time.ZonedLocal
 import com.jpspm.travelplanner.domain.model.Destination
@@ -133,6 +147,9 @@ data class ReservationForm(
     val removedAttachmentIds: Set<String> = emptySet(),
     val showErrors: Boolean = false,
 ) {
+    /** Troca o tipo (só na importação, quando a leitura pode ter errado): título e detalhes que não servem ficam de fora ao salvar. */
+    fun withType(newType: ReservationType) = copy(type = newType)
+
     val titleError get() = type.hasTitleField && title.isBlank()
     val priceError get() = price.isNotBlank() && Money.parse(price) == null
     val endBeforeStart: Boolean
@@ -144,6 +161,9 @@ data class ReservationForm(
     val isValid get() = !titleError && !priceError && !start.timeMissing && !(type.hasEnd && (end.timeMissing || endBeforeStart))
 }
 
+/** Como foi a leitura do PDF importado, para o aviso no topo do formulário. */
+data class ImportNotice(val fileName: String, val readText: Boolean, val recognized: Int)
+
 /** Horários padrão ao escolher a data, quando o tipo tem um horário típico. */
 private fun ReservationType.defaultStartTime(): LocalTime? = if (this == ReservationType.LODGING) LocalTime(14, 0) else null
 private fun ReservationType.defaultEndTime(): LocalTime? = if (this == ReservationType.LODGING) LocalTime(12, 0) else null
@@ -154,6 +174,8 @@ class ReservationEditorViewModel(
     type: String?,
     initialDate: String?,
     private val ideaId: String?,
+    private val fromImport: Boolean,
+    private val importer: ReservationImporter,
     private val ideas: IdeaRepository,
     private val trips: TripRepository,
     private val reservations: ReservationRepository,
@@ -166,12 +188,25 @@ class ReservationEditorViewModel(
         private set
     val isNew get() = reservationId == null
     private var ideaPlaceId: String? = null
+    var importNotice by mutableStateOf<ImportNotice?>(null)
+        private set
+    var importing by mutableStateOf(false)
+        private set
 
     init {
         viewModelScope.launch {
             destinations = destinationsRepo.observeDestinations(tripId).first()
             val existing = reservationId?.let { reservations.getReservation(it) }
-            form = if (existing != null) {
+            val imported = if (!fromImport) null else importer.takePending()?.let { pending ->
+                if (pending.read) pending
+                else {
+                    importing = true
+                    try { importer.read(pending.files) } finally { importing = false }
+                }
+            }
+            form = if (imported != null) {
+                fromImport(imported)
+            } else if (existing != null) {
                 val zone = defaultTimeZoneFor(existing.start?.date, destinations)
                 ReservationForm(
                     type = existing.type,
@@ -202,6 +237,34 @@ class ReservationEditorViewModel(
             }
         }
     }
+
+    /** Formulário preenchido com o que foi lido do PDF; todos os arquivos recebidos viram anexos. */
+    private suspend fun fromImport(imported: ImportResult): ReservationForm {
+        val draft = imported.draft
+        val type = draft?.type ?: form.type
+        val tripStart = trips.getTrip(tripId)?.startDate
+        fun moment(date: LocalDate?, time: LocalTime?, zone: String?) = MomentForm(
+            date = date,
+            time = time,
+            timeZoneId = zone ?: defaultTimeZoneFor(date ?: draft?.startDate ?: tripStart, destinations),
+            timeZoneTouched = zone != null,
+        )
+        imported.sourceName?.let { importNotice = ImportNotice(it, draft != null, draft?.recognized ?: 0) }
+        return ReservationForm(
+            type = type,
+            title = draft?.title.orEmpty(),
+            details = draft?.details.orEmpty().mapKeys { it.key.key },
+            start = moment(draft?.startDate, draft?.start?.time, draft?.startZone),
+            end = moment(draft?.endDate, draft?.end?.time, draft?.endZone),
+            confirmationCode = draft?.confirmationCode.orEmpty(),
+            price = draft?.priceCents?.let(Money::toInput).orEmpty(),
+            priceCurrency = draft?.currency ?: Currency.BRL,
+            notes = draft?.address?.let { "📍 $it" }.orEmpty(),
+            attachments = imported.files.map { AttachmentDraft.New(newId(), it.file, if (it.isPdf) AttachmentKind.PDF else AttachmentKind.QR) },
+        )
+    }
+
+    fun changeType(type: ReservationType) = update { it.withType(type) }
 
     fun update(transform: (ReservationForm) -> ReservationForm) {
         form = transform(form)
@@ -300,9 +363,10 @@ fun ReservationEditorScreen(
     type: String?,
     date: String? = null,
     ideaId: String? = null,
+    fromImport: Boolean = false,
     onBack: () -> Unit,
     onSaved: (String) -> Unit,
-    viewModel: ReservationEditorViewModel = koinViewModel { parametersOf(tripId, reservationId, type, date, ideaId) },
+    viewModel: ReservationEditorViewModel = koinViewModel { parametersOf(tripId, reservationId, type, date, ideaId, fromImport) },
 ) {
     val form = viewModel.form
     val typeName = stringResource(form.type.label)
@@ -325,6 +389,11 @@ fun ReservationEditorScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
         ) {
+            if (viewModel.importing) {
+                Text(stringResource(Res.string.import_reading), style = androidx.compose.material3.MaterialTheme.typography.bodyMedium)
+                androidx.compose.material3.LinearProgressIndicator(Modifier.fillMaxWidth())
+            }
+            viewModel.importNotice?.let { notice -> ImportBanner(notice, form.type, viewModel::changeType) }
             if (form.type.hasTitleField) {
                 FormTextField(
                     label = stringResource(form.type.titleLabel),
@@ -406,6 +475,35 @@ fun ReservationEditorScreen(
                 isError = form.showErrors && form.priceError,
                 errorText = stringResource(Res.string.error_invalid_price),
             )
+        }
+    }
+}
+
+/** Aviso da importação e, como a leitura pode errar o tipo, a troca de tipo. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ImportBanner(notice: ImportNotice, type: ReservationType, onTypeChange: (ReservationType) -> Unit) {
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = if (notice.readText && notice.recognized > 1) androidx.compose.material3.MaterialTheme.colorScheme.secondaryContainer
+            else androidx.compose.material3.MaterialTheme.colorScheme.errorContainer,
+        ),
+    ) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                when {
+                    !notice.readText -> stringResource(Res.string.import_no_text, notice.fileName)
+                    notice.recognized <= 1 -> stringResource(Res.string.import_little, notice.fileName)
+                    else -> stringResource(Res.string.import_done, notice.fileName)
+                },
+                style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+            )
+            Text(stringResource(Res.string.import_type), style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                ReservationType.entries.forEach { t ->
+                    FilterChip(selected = t == type, onClick = { onTypeChange(t) }, label = { Text("${t.emoji} ${stringResource(t.label)}") })
+                }
+            }
         }
     }
 }

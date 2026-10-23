@@ -49,6 +49,7 @@ import com.jpspm.travelplanner.domain.repository.MapSnapshotRepository
 import com.jpspm.travelplanner.platform.Connectivity
 import com.jpspm.travelplanner.ui.map.StaticMapSync
 import org.koin.compose.koinInject
+import com.jpspm.travelplanner.data.importing.ReservationImporter
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import com.jpspm.travelplanner.ui.backup.BackupDialogs
@@ -113,6 +114,8 @@ fun TripDetailScreen(
     onNewActivity: (date: String?) -> Unit,
     onEditActivity: (String) -> Unit,
     onNewReservation: (ReservationType, date: String?) -> Unit,
+    /** Reserva nova a partir de um PDF já preparado no [ReservationImporter] (RF-50). */
+    onImportReservation: () -> Unit,
     onOpenReservation: (String) -> Unit,
     onNewDestination: () -> Unit,
     onOpenCity: (String) -> Unit,
@@ -139,6 +142,13 @@ fun TripDetailScreen(
     var adding by remember { mutableStateOf<AddRequest?>(null) }
     // Dia que está no topo da lista do roteiro: o botão de adicionar usa essa data.
     var itineraryDay by remember { mutableStateOf<kotlinx.datetime.LocalDate?>(null) }
+    val importer = koinInject<ReservationImporter>()
+    val importPicker = rememberFilePickerLauncher(type = FileKitType.File("pdf")) { file ->
+        if (file != null) {
+            importer.prepare(file)
+            onImportReservation()
+        }
+    }
     val coverPicker = rememberFilePickerLauncher(type = FileKitType.Image) { file ->
         if (file != null) viewModel.setCoverPhoto(file)
     }
@@ -353,6 +363,7 @@ fun TripDetailScreen(
             onActivity = { date -> adding = null; onNewActivity(date?.toString()) },
             onReservation = { type, date -> adding = null; onNewReservation(type, date?.toString()) },
             onDismiss = { adding = null },
+            onImportPdf = { adding = null; importPicker.launch() },
         )
     }
 }

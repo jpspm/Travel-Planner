@@ -31,6 +31,8 @@ data class ReservationEditorRoute(
     val date: String? = null,
     /** Ideia sendo levada para o roteiro: preenche o formulário e sai da lista ao salvar. */
     val ideaId: String? = null,
+    /** Reserva nova a partir de um PDF já preparado no [com.jpspm.travelplanner.data.importing.ReservationImporter]. */
+    val fromImport: Boolean = false,
 )
 
 @Serializable

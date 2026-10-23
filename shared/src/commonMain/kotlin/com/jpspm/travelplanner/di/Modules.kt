@@ -58,6 +58,7 @@ import com.jpspm.travelplanner.data.repository.LocalWeatherRepository
 import com.jpspm.travelplanner.domain.repository.CurrencyRepository
 import com.jpspm.travelplanner.domain.repository.TravelerRepository
 import com.jpspm.travelplanner.domain.weather.WeatherRepository
+import com.jpspm.travelplanner.data.importing.ReservationImporter
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
@@ -80,6 +81,8 @@ val dataModule = module {
     single<MapSnapshotRepository> { LocalMapSnapshotRepository(get(), get(), get()) }
     single<BudgetRepository> { LocalBudgetRepository(get(), get()) }
     single<ChecklistRepository> { LocalChecklistRepository(get(), get()) }
+    // Importação de reservas por PDF (RF-50).
+    single { ReservationImporter(get(), get()) }
     // Tempo, câmbio e divisão de gastos (RF-47 a RF-49).
     single { OpenMeteoClient(get()) }
     single { FrankfurterClient(get()) }
@@ -105,7 +108,8 @@ val uiModule = module {
     viewModel { params ->
         ReservationEditorViewModel(
             params[0], params.values.getOrNull(1) as String?, params.values.getOrNull(2) as String?,
-            params.values.getOrNull(3) as String?, params.values.getOrNull(4) as String?, get(), get(), get(), get(),
+            params.values.getOrNull(3) as String?, params.values.getOrNull(4) as String?,
+            params.values.getOrNull(5) as Boolean? ?: false, get(), get(), get(), get(), get(),
         )
     }
     viewModel { params -> ReservationDetailViewModel(params.get(), get(), get(), get()) }
@@ -114,7 +118,7 @@ val uiModule = module {
     viewModel { BackupViewModel(get()) }
     viewModel { HtmlExportViewModel(get()) }
     viewModel { RemindersViewModel(get()) }
-    viewModel { ShareTargetViewModel(get(), get(), get()) }
+    viewModel { ShareTargetViewModel(get(), get(), get(), get()) }
     viewModel { params -> BudgetViewModel(params.get(), get(), get(), get(), get()) }
     viewModel { params -> ChecklistViewModel(params.get(), get()) }
     viewModel { params -> IdeasViewModel(params.get(), get(), get()) }

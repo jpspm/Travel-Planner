@@ -1,5 +1,8 @@
 # Travel Planner
 
+[![CI](https://github.com/jpspm/Travel-Planner/actions/workflows/ci.yml/badge.svg)](https://github.com/jpspm/Travel-Planner/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/jpspm/Travel-Planner)](https://github.com/jpspm/Travel-Planner/releases/latest)
+
 A trip-planning app that keeps **the whole trip in one place**: a day-by-day itinerary with time zones, bookings with QR codes and PDFs, maps, place photos, budget, checklist, and a trip history once the trip is over.
 
 - **Local-first and offline:** no server, no login, no account. All data stays on the device.
@@ -31,7 +34,8 @@ A trip-planning app that keeps **the whole trip in one place**: a day-by-day iti
 | **Calendar** | Export the itinerary as an `.ics` file to import into any calendar app |
 | **Backup** | Export and import a `.zip` (all trips or one), merge or replace, with a reminder when no backup has been made in a while |
 | **Reminders** *(Android)* | Notifications before flights and trains, other bookings and activities, with adjustable lead times |
-| **Share to the app** *(Android)* | Receive a PDF or screenshot from another app ("Share → Travel Planner") and attach it to a booking |
+| **Import from PDF** | Create a booking from a ticket, voucher or confirmation PDF: the text is read on the device and the form comes pre-filled (type, code, dates and times in each airport's time zone, price and currency, flight and train details) for you to review |
+| **Share to the app** *(Android)* | Receive a PDF or screenshot from another app ("Share → Travel Planner") and create a booking from it or attach it to an existing one |
 | **"Today" widget** *(Android)* | Today's trip, the next event and today's tickets on the home screen |
 
 The interface is **Brazilian Portuguese only**, and totals are in **BRL**. All strings live in Compose resources, so other languages can be added later.
@@ -50,6 +54,7 @@ The interface is **Brazilian Portuguese only**, and totals are in **BRL**. All s
 | Images | Coil 3 (with Ktor and the FileKit integration) |
 | Map | MapLibre Compose + OpenFreeMap vector style |
 | Files | FileKit (pickers, camera, sharing) |
+| PDF text | PdfBox-Android (on-device, for importing bookings); PDFKit on iOS |
 | Dependency injection | Koin |
 | Serialization | `kotlinx-serialization` (backup JSON) |
 
@@ -85,6 +90,7 @@ domain/        pure rules, no platform dependencies
   reminders/     reminder scheduling rules
   export/        itinerary HTML and calendar (.ics)
   map/           what goes into each static map image
+  importing/     reads booking confirmations (dates, codes, prices, airports)
   repository/    repository interfaces
 data/          implementations: Room, files, remote APIs, backup, export, background sync
 ui/            Compose screens, ViewModels, navigation and theme
@@ -119,6 +125,43 @@ On Windows, use `gradlew.bat`. **iOS:** open `iosApp/` in Xcode on a Mac.
 
 ---
 
+## Download
+
+Signed Android APKs are published on the [Releases](https://github.com/jpspm/Travel-Planner/releases) page. Download the `.apk` on your phone and allow installing from your browser or file manager. New versions install over the old one and keep your data.
+
+---
+
+## CI/CD
+
+GitHub Actions, in `.github/workflows/`:
+
+| Workflow | When | What it does |
+|---|---|---|
+| `ci.yml` | Every push to `main` and every pull request | Runs the tests and builds the debug APK (available as a build artifact) |
+| `release.yml` | Pushing a tag `vX.Y.Z` | Runs the tests, builds the signed release APK with version `X.Y.Z`, and publishes a GitHub release with the APK and its SHA-256 checksum. Tags with a suffix (`v1.1.0-beta.1`) become pre-releases |
+
+**Publishing a version:**
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The version name comes from the tag, and the version code is derived from it (`1.2.3` → `10203`). Locally, the version comes from `appVersion` in `gradle.properties`.
+
+**Signing:** the release workflow needs these repository secrets (Settings → Secrets and variables → Actions):
+
+| Secret | Content |
+|---|---|
+| `RELEASE_KEYSTORE_BASE64` | The keystore file encoded in Base64 |
+| `RELEASE_KEYSTORE_PASSWORD` | Keystore password |
+| `RELEASE_KEY_ALIAS` | Key alias |
+| `RELEASE_KEY_PASSWORD` | Key password |
+
+The keystore is never committed (`*.jks` is ignored). Keep a backup of it: without the same key, new versions can't be installed over the old ones. To build a signed APK locally, set the same values as environment variables, with `RELEASE_KEYSTORE_PATH` pointing to the `.jks` file, and run `./gradlew :androidApp:assembleRelease`.
+
+---
+
 ## Tests
 
 Tests live in `shared/src/commonTest` and cover the domain rules:
@@ -131,6 +174,7 @@ Tests live in `shared/src/commonTest` and cover the domain rules:
 - grouping by city;
 - budget and cost splitting;
 - reminders;
+- booking import from PDF text (flights, hotels, trains, car rentals; date and money formats);
 - search, photos, weather and exchange rates (with mocked responses, no network);
 - backup format and protection against malicious archives ("zip slip");
 - exported HTML and calendar (checks that codes, prices and attachments never leak);

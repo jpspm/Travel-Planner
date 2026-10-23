@@ -8,6 +8,8 @@ import com.jpspm.travelplanner.platform.Connectivity
 import com.jpspm.travelplanner.platform.AndroidHomeWidgetUpdater
 import com.jpspm.travelplanner.platform.AndroidReminderScheduler
 import com.jpspm.travelplanner.platform.HomeWidgetUpdater
+import com.jpspm.travelplanner.platform.AndroidPdfTextReader
+import com.jpspm.travelplanner.platform.PdfTextReader
 import com.jpspm.travelplanner.platform.ReminderScheduler
 import com.jpspm.travelplanner.platform.handleShareIntent
 import io.github.vinceglb.filekit.FileKit
@@ -23,6 +25,7 @@ fun initAndroid(context: Context) {
             single<Connectivity> { AndroidConnectivity(context.applicationContext) }
             single<ReminderScheduler> { AndroidReminderScheduler(context.applicationContext) }
             single<HomeWidgetUpdater> { AndroidHomeWidgetUpdater(context.applicationContext) }
+            single<PdfTextReader> { AndroidPdfTextReader(context.applicationContext) }
         }
     ).androidContext(context.applicationContext)
 }

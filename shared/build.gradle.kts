@@ -56,6 +56,8 @@ kotlin {
             implementation(libs.ktor.client.okhttp)
             // Renderização do mapa no Android (OpenGL ES funciona em mais aparelhos e no emulador).
             implementation(libs.maplibre.native.runtime.opengl)
+            // Texto de PDFs para importar reservas, no aparelho (RF-50).
+            implementation(libs.pdfbox.android)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)

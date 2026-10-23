@@ -1,0 +1,53 @@
+# CI: a cada push na main e em cada pull request, roda os testes e gera o APK de debug.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Testes e APK de debug
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      # O gradlew foi versionado no Windows, sem permissão de execução.
+      - run: chmod +x gradlew
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          # Só a main grava o cache; PRs só leem.
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+      - name: Testes
+        run: ./gradlew :shared:testAndroidHostTest --stacktrace
+
+      - name: APK de debug
+        run: ./gradlew :androidApp:assembleDebug
+
+      - name: Relatório dos testes
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-testes
+          path: shared/build/reports/tests/
+          retention-days: 7
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: travel-planner-debug
+          path: androidApp/build/outputs/apk/debug/*.apk
+          retention-days: 14

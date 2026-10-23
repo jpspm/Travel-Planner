@@ -7,6 +7,8 @@ import com.jpspm.travelplanner.platform.Connectivity
 import com.jpspm.travelplanner.platform.IosConnectivity
 import com.jpspm.travelplanner.platform.HomeWidgetUpdater
 import com.jpspm.travelplanner.platform.NoBackground
+import com.jpspm.travelplanner.platform.IosPdfTextReader
+import com.jpspm.travelplanner.platform.PdfTextReader
 import com.jpspm.travelplanner.platform.ReminderScheduler
 import org.koin.dsl.module
 
@@ -17,6 +19,7 @@ private val koinStarted by lazy {
             single<Connectivity> { IosConnectivity() }
             single<ReminderScheduler> { NoBackground }
             single<HomeWidgetUpdater> { NoBackground }
+            single<PdfTextReader> { IosPdfTextReader() }
         }
     )
 }
