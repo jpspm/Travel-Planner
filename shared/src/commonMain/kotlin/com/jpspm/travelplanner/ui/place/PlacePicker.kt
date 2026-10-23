@@ -55,6 +55,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil3.compose.AsyncImage
 import com.jpspm.travelplanner.domain.model.PhotoInput
+import com.jpspm.travelplanner.domain.places.OpeningHours
 import com.jpspm.travelplanner.domain.repository.LatLng
 import com.jpspm.travelplanner.domain.repository.PlaceCandidate
 import com.jpspm.travelplanner.domain.repository.PlaceSearch
@@ -88,6 +89,8 @@ data class PlacePickerState(
     val selected: PlaceCandidate? = null,
     val loadingPhoto: Boolean = false,
     val photo: RemotePhoto? = null,
+    /** Horário de funcionamento do lugar escolhido, quando conhecido (RF-40). */
+    val openingHours: String? = null,
 )
 
 @OptIn(FlowPreview::class)
@@ -147,23 +150,27 @@ class PlacePickerViewModel(private val search: PlaceSearch) : ViewModel() {
     }
 
     fun select(candidate: PlaceCandidate) {
-        state = state.copy(selected = candidate, photo = null, loadingPhoto = true)
+        state = state.copy(selected = candidate, photo = null, openingHours = candidate.openingHours, loadingPhoto = true)
         photoJob?.cancel()
         photoJob = viewModelScope.launch {
-            val photo = try {
-                search.photoFor(candidate)
+            val details = try {
+                search.details(candidate)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 null
             }
-            state = state.copy(photo = photo, loadingPhoto = false)
+            state = state.copy(
+                photo = details?.photo,
+                openingHours = details?.openingHours ?: candidate.openingHours,
+                loadingPhoto = false,
+            )
         }
     }
 
     fun clearSelection() {
         photoJob?.cancel()
-        state = state.copy(selected = null, photo = null, loadingPhoto = false)
+        state = state.copy(selected = null, photo = null, openingHours = null, loadingPhoto = false)
     }
 }
 
@@ -192,7 +199,7 @@ fun PlacePickerDialog(
         val galleryPicker = rememberFilePickerLauncher(type = FileKitType.Image) { file ->
             val selected = state.selected
             if (file != null && selected != null) {
-                val draft = PlaceDraft.of(selected, photo = null)
+                val draft = PlaceDraft.of(selected, photo = null, openingHours = state.openingHours)
                 onPick(draft.copy(input = draft.input.copy(photo = PhotoInput.Local(file)), photoModel = file, photoCredit = null))
             }
         }
@@ -247,7 +254,7 @@ fun PlacePickerDialog(
                     SelectedPlace(
                         candidate = selected,
                         state = state,
-                        onConfirm = { onPick(PlaceDraft.of(selected, state.photo)) },
+                        onConfirm = { onPick(PlaceDraft.of(selected, state.photo, state.openingHours)) },
                         onGallery = { galleryPicker.launch() },
                         onBack = viewModel::clearSelection,
                     )
@@ -341,6 +348,12 @@ private fun SelectedPlace(
                 Text(candidate.name, style = MaterialTheme.typography.titleMedium)
                 Text(candidate.address, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
+        }
+        state.openingHours?.let { hours ->
+            Text(
+                stringResource(Res.string.place_opening_hours, OpeningHours.describe(hours)),
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
         state.photo?.let { photo ->
             Text(

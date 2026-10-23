@@ -32,6 +32,9 @@ data class ReservationEditorRoute(
 )
 
 @Serializable
+data class NearbyRoute(val tripId: String)
+
+@Serializable
 data class IdeaEditorRoute(val tripId: String, val ideaId: String? = null)
 
 @Serializable

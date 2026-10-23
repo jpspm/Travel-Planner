@@ -75,6 +75,7 @@ class PlaceWriter(
             city = input.city,
             timeZoneId = input.timeZoneId,
             osmId = input.osmId,
+            openingHours = input.openingHours,
             updatedAt = now,
         )
         db.placeDao().upsert(entity)

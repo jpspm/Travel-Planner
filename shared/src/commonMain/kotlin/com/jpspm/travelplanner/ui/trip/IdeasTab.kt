@@ -1,7 +1,13 @@
 package com.jpspm.travelplanner.ui.trip
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.ui.Alignment
+import com.jpspm.travelplanner.resources.nearby_title
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -81,6 +87,7 @@ fun IdeasTab(
     tripId: String,
     defaultDate: LocalDate,
     onOpenIdea: (String) -> Unit,
+    onOpenNearby: () -> Unit,
     modifier: Modifier,
     viewModel: IdeasViewModel = koinViewModel { parametersOf(tripId) },
 ) {
@@ -89,7 +96,10 @@ fun IdeasTab(
     var deleting by remember { mutableStateOf<Idea?>(null) }
 
     if (!state.loading && state.ideas.isEmpty()) {
-        EmptyState("💡", stringResource(Res.string.ideas_empty_title), stringResource(Res.string.ideas_empty_message), modifier)
+        Column(modifier) {
+            EmptyState("💡", stringResource(Res.string.ideas_empty_title), stringResource(Res.string.ideas_empty_message), Modifier.weight(1f))
+            NearbyButton(onOpenNearby, Modifier.align(Alignment.CenterHorizontally).padding(bottom = 96.dp))
+        }
         return
     }
     val noPlace = stringResource(Res.string.ideas_no_place)
@@ -98,6 +108,7 @@ fun IdeasTab(
     }.toList().sortedBy { (city, _) -> if (city == noPlace) "￿" else city }
 
     LazyColumn(modifier, contentPadding = PaddingValues(bottom = 96.dp)) {
+        item(key = "nearby") { NearbyButton(onOpenNearby, Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) }
         groups.forEach { (city, ideas) ->
             item(key = "city:$city") { SectionHeader(city, Modifier) }
             items(ideas, key = { it.id }) { idea ->
@@ -121,6 +132,14 @@ fun IdeasTab(
             onConfirm = { viewModel.delete(idea.id) },
             onDismiss = { deleting = null },
         )
+    }
+}
+
+@Composable
+private fun NearbyButton(onClick: () -> Unit, modifier: Modifier) {
+    OutlinedButton(onClick = onClick, modifier = modifier) {
+        Icon(Icons.Default.Search, contentDescription = null)
+        Text(stringResource(Res.string.nearby_title), modifier = Modifier.padding(start = 8.dp))
     }
 }
 

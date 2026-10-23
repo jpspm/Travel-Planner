@@ -26,7 +26,7 @@ data class PlaceDraft(
         }
 
         /** Lugar escolhido na busca, com fuso sugerido pelas coordenadas (RF-13). */
-        fun of(candidate: PlaceCandidate, photo: RemotePhoto?): PlaceDraft = PlaceDraft(
+        fun of(candidate: PlaceCandidate, photo: RemotePhoto?, openingHours: String? = candidate.openingHours): PlaceDraft = PlaceDraft(
             input = PlaceInput(
                 name = candidate.name,
                 address = candidate.address,
@@ -36,6 +36,7 @@ data class PlaceDraft(
                 city = candidate.city,
                 timeZoneId = TimeZoneSuggester.suggest(candidate.countryCode, candidate.latitude, candidate.longitude),
                 osmId = candidate.osmId,
+                openingHours = openingHours,
                 photo = photo?.let { PhotoInput.Remote(it) } ?: PhotoInput.Remove,
             ),
             photoModel = photo?.url,

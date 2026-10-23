@@ -30,6 +30,9 @@ import com.jpspm.travelplanner.domain.planning.WalkEstimate
 import com.jpspm.travelplanner.domain.repository.LatLng
 import com.jpspm.travelplanner.resources.Res
 import com.jpspm.travelplanner.resources.action_cancel
+import com.jpspm.travelplanner.domain.places.OpeningHours
+import com.jpspm.travelplanner.resources.conflict_closed_all_day
+import com.jpspm.travelplanner.resources.conflict_closed_at_time
 import com.jpspm.travelplanner.resources.conflict_dismiss
 import com.jpspm.travelplanner.resources.conflict_during_transit
 import com.jpspm.travelplanner.resources.conflict_night_without_lodging
@@ -72,6 +75,8 @@ private fun ConflictRow(conflict: Conflict, titles: Map<String, String>, onDismi
         is Conflict.DuringTransit -> stringResource(Res.string.conflict_during_transit, title(conflict.activity), title(conflict.transit))
         is Conflict.NightWithoutLodging -> stringResource(Res.string.conflict_night_without_lodging)
         is Conflict.OutsideTrip -> stringResource(Res.string.conflict_outside_trip)
+        is Conflict.ClosedAtTime -> stringResource(Res.string.conflict_closed_at_time, title(conflict.activity), OpeningHours.describe(conflict.openingHours))
+        is Conflict.ClosedAllDay -> stringResource(Res.string.conflict_closed_all_day, title(conflict.activity), OpeningHours.describe(conflict.openingHours))
     }
     Surface(
         color = MaterialTheme.colorScheme.secondaryContainer,

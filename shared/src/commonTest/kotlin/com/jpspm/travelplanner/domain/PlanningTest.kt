@@ -141,6 +141,30 @@ class PlanningTest {
     }
 
     @Test
+    fun closedPlaceWarnings() {
+        // 1º de maio de 2027 é um sábado.
+        val museum = place("museu", 41.9, 12.45).copy(openingHours = "Mo-Fr 09:00-18:00; Sa 09:00-13:00; Su off")
+        val conflicts = detect(
+            listOf(
+                activity("tarde", d1, LocalTime(15, 0), place = museum), // sábado à tarde: fechado
+                activity("manha", d1, LocalTime(10, 0), place = museum), // sábado de manhã: aberto
+                activity("domingo", d2, place = museum), // domingo sem horário: fechado o dia todo
+            ),
+            emptyList(),
+        )
+        assertEquals(
+            listOf(
+                Conflict.ClosedAtTime(d1, "a:tarde", museum.openingHours!!),
+                Conflict.ClosedAllDay(d2, "a:domingo", museum.openingHours!!),
+            ),
+            conflicts,
+        )
+        // Formato não entendido: nenhum aviso.
+        val unknown = place("x", 41.9, 12.45).copy(openingHours = "Mo-Fr 09:00-18:00; PH off")
+        assertEquals(emptyList(), detect(listOf(activity("y", d1, LocalTime(23, 0), place = unknown)), emptyList()))
+    }
+
+    @Test
     fun untimedActivitiesNeverConflict() {
         assertEquals(emptyList(), detect(listOf(activity("livre", d1), activity("livre2", d1)), emptyList()))
     }

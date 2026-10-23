@@ -217,6 +217,7 @@
     <string name="place_back_to_results">Voltar aos resultados</string>
     <string name="place_no_photo">Sem foto na Wikimedia para este lugar. Você pode escolher uma da galeria.</string>
     <string name="place_photo_credit">Foto: %1$s · Wikimedia Commons</string>
+    <string name="place_opening_hours">Horário: %1$s</string>
     <string name="place_open_in_maps">Abrir no app de mapas</string>
     <string name="destination_search">Buscar cidade</string>
 
@@ -363,6 +364,8 @@
     <string name="conflict_during_transit">%1$s está marcado durante %2$s.</string>
     <string name="conflict_night_without_lodging">Noite sem hospedagem cadastrada.</string>
     <string name="conflict_outside_trip">Atividade fora das datas da viagem.</string>
+    <string name="conflict_closed_at_time">%1$s pode estar fechado nesse horário (funciona: %2$s).</string>
+    <string name="conflict_closed_all_day">%1$s pode estar fechado nesse dia (funciona: %2$s).</string>
     <string name="conflict_dismiss">Dispensar aviso</string>
 
     <!-- Deslocamento e ordem do dia (RF-38, RF-39) -->
@@ -372,4 +375,13 @@
     <string name="order_dialog_title">Ordem sugerida</string>
     <string name="order_dialog_message">Pelas atividades sem horário, o trajeto passaria de ≈ %1$s para ≈ %2$s:</string>
     <string name="order_apply">Aplicar ordem</string>
+
+    <!-- Atrações por perto (RF-42) -->
+    <string name="nearby_title">Atrações por perto</string>
+    <string name="nearby_add">Ideia</string>
+    <string name="nearby_added">Adicionada</string>
+    <string name="nearby_empty">Nada encontrado na Wikipédia perto deste lugar.</string>
+    <string name="nearby_offline">Sem conexão. As atrações por perto precisam de internet.</string>
+    <string name="nearby_no_reference">Busque o lugar de uma hospedagem, cidade ou atividade para ver o que tem por perto.</string>
+    <string name="nearby_source">Fonte: Wikipédia (páginas a até 1,5 km). Distância em linha reta.</string>
 </resources>

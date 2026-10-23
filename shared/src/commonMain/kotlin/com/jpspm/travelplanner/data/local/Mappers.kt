@@ -51,6 +51,7 @@ internal fun PlaceEntity.toDomain(files: FileStore) = Place(
     photoAuthor = photoAuthor,
     photoLicense = photoLicense,
     photoSourceUrl = photoSourceUrl,
+    openingHours = openingHours,
 )
 
 internal fun DestinationEntity.toDomain(places: Map<String, Place>) = Destination(

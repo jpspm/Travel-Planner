@@ -6,6 +6,7 @@ import com.jpspm.travelplanner.data.files.FileStore
 import com.jpspm.travelplanner.ui.trip.BudgetViewModel
 import com.jpspm.travelplanner.ui.trip.ChecklistViewModel
 import com.jpspm.travelplanner.ui.trip.IdeasViewModel
+import com.jpspm.travelplanner.ui.trip.NearbyViewModel
 import com.jpspm.travelplanner.ui.editors.IdeaEditorViewModel
 import com.jpspm.travelplanner.ui.trip.HtmlExportViewModel
 import com.jpspm.travelplanner.data.settings.SettingsStore
@@ -89,6 +90,7 @@ val uiModule = module {
     viewModel { params -> BudgetViewModel(params.get(), get(), get(), get()) }
     viewModel { params -> ChecklistViewModel(params.get(), get()) }
     viewModel { params -> IdeasViewModel(params.get(), get(), get()) }
+    viewModel { params -> NearbyViewModel(params.get(), get(), get(), get(), get(), get(), get()) }
     viewModel { params -> IdeaEditorViewModel(params[0], params.values.getOrNull(1) as String?, get(), get()) }
 }
 

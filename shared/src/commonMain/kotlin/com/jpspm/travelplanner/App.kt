@@ -27,6 +27,8 @@ import com.jpspm.travelplanner.ui.navigation.ActivityEditorRoute
 import com.jpspm.travelplanner.ui.navigation.AttachmentViewerRoute
 import com.jpspm.travelplanner.ui.navigation.CityRoute
 import com.jpspm.travelplanner.ui.navigation.IdeaEditorRoute
+import com.jpspm.travelplanner.ui.navigation.NearbyRoute
+import com.jpspm.travelplanner.ui.trip.NearbyScreen
 import com.jpspm.travelplanner.ui.editors.IdeaEditorScreen
 import com.jpspm.travelplanner.ui.navigation.DestinationEditorRoute
 import com.jpspm.travelplanner.ui.navigation.ReservationDetailRoute
@@ -100,7 +102,11 @@ fun App() {
                         onNewDestination = { nav.navigate(DestinationEditorRoute(tripId)) },
                         onOpenCity = { nav.navigate(CityRoute(tripId, it)) },
                     onOpenIdea = { nav.navigate(IdeaEditorRoute(tripId, it)) },
+                    onOpenNearby = { nav.navigate(NearbyRoute(tripId)) },
                     )
+                }
+                screen<NearbyRoute> { entry ->
+                    NearbyScreen(entry.toRoute<NearbyRoute>().tripId, onBack = nav::back)
                 }
                 screen<IdeaEditorRoute> { entry ->
                     val route = entry.toRoute<IdeaEditorRoute>()

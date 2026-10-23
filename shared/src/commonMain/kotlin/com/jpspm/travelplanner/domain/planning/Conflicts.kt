@@ -7,6 +7,7 @@ import com.jpspm.travelplanner.domain.model.Reservation
 import com.jpspm.travelplanner.domain.model.ReservationType
 import com.jpspm.travelplanner.domain.model.Trip
 import com.jpspm.travelplanner.domain.model.plusDays
+import com.jpspm.travelplanner.domain.places.OpeningHours
 import kotlinx.datetime.LocalDate
 import kotlin.time.Instant
 
@@ -31,6 +32,16 @@ sealed interface Conflict {
     /** Noite sem hospedagem cadastrada (e sem estar em trânsito). */
     data class NightWithoutLodging(override val date: LocalDate) : Conflict {
         override val key get() = "night:$date"
+    }
+
+    /** Atividade marcada num horário em que o lugar costuma estar fechado (RF-41). */
+    data class ClosedAtTime(override val date: LocalDate, val activity: String, val openingHours: String) : Conflict {
+        override val key get() = "closed:$activity"
+    }
+
+    /** Atividade sem horário num dia em que o lugar costuma ficar fechado o dia todo (RF-41). */
+    data class ClosedAllDay(override val date: LocalDate, val activity: String, val openingHours: String) : Conflict {
+        override val key get() = "closedday:$activity"
     }
 
     /** Atividade fora das datas da viagem. */
@@ -71,6 +82,18 @@ object ConflictDetector {
                 val a = spans[i]
                 val b = spans[j]
                 if (overlaps(a, b)) conflicts += Conflict.Overlap(day.date, a.id, b.id)
+            }
+        }
+
+        // RF-41: lugar fechado no dia ou no horário, quando o horário de funcionamento é conhecido e entendido.
+        activities.forEach { a ->
+            val hours = a.place?.openingHours ?: return@forEach
+            val schedule = OpeningHours.parse(hours) ?: return@forEach
+            val day = a.date.dayOfWeek
+            val start = a.startTime
+            when {
+                start != null && !schedule.isOpenAt(day, start) -> conflicts += Conflict.ClosedAtTime(a.date, "a:${a.id}", hours)
+                start == null && schedule.isClosedAllDay(day) -> conflicts += Conflict.ClosedAllDay(a.date, "a:${a.id}", hours)
             }
         }
 

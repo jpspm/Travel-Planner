@@ -115,6 +115,7 @@ fun TripDetailScreen(
     onNewDestination: () -> Unit,
     onOpenCity: (String) -> Unit,
     onOpenIdea: (String?) -> Unit,
+    onOpenNearby: () -> Unit,
     viewModel: TripDetailViewModel = koinViewModel { parametersOf(tripId) },
     backupViewModel: BackupViewModel = koinViewModel(),
 ) {
@@ -284,6 +285,7 @@ fun TripDetailScreen(
                 tripId = tripId,
                 defaultDate = itineraryDay ?: state.today?.takeIf { it in trip.startDate..trip.endDate } ?: trip.startDate,
                 onOpenIdea = onOpenIdea,
+                onOpenNearby = onOpenNearby,
                 modifier = modifier,
             )
         }

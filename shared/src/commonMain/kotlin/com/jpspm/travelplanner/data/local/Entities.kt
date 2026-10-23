@@ -54,6 +54,8 @@ data class PlaceEntity(
     val photoSourceUrl: String?,
     val createdAt: Long,
     val updatedAt: Long,
+    /** Horário no formato `opening_hours` do OSM (RF-40). Versão 6 do banco. */
+    @ColumnInfo(defaultValue = "NULL") val openingHours: String? = null,
 )
 
 @Serializable

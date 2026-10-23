@@ -31,7 +31,9 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.jpspm.travelplanner.domain.repository.LatLng
 import com.jpspm.travelplanner.resources.Res
+import com.jpspm.travelplanner.domain.places.OpeningHours
 import com.jpspm.travelplanner.resources.place_change
+import com.jpspm.travelplanner.resources.place_opening_hours
 import com.jpspm.travelplanner.resources.place_manual
 import com.jpspm.travelplanner.resources.place_remove
 import com.jpspm.travelplanner.resources.place_search_button
@@ -114,6 +116,14 @@ private fun PlaceCard(draft: PlaceDraft, onChange: () -> Unit, onRemove: () -> U
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
+                draft.input.openingHours?.let { hours ->
+                    Text(
+                        stringResource(Res.string.place_opening_hours, OpeningHours.describe(hours)),
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
                 draft.photoCredit?.let {
                     Text(
                         it,

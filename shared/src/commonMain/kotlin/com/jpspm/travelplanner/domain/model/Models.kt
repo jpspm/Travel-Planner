@@ -52,6 +52,8 @@ data class Place(
     val photoAuthor: String?,
     val photoLicense: String?,
     val photoSourceUrl: String?,
+    /** Horário no formato `opening_hours` do OSM, quando conhecido (RF-40). */
+    val openingHours: String? = null,
 ) {
     val hasPosition: Boolean get() = latitude != null && longitude != null
 
@@ -75,6 +77,7 @@ data class PlaceInput(
     val city: String? = null,
     val timeZoneId: String? = null,
     val osmId: String? = null,
+    val openingHours: String? = null,
     val photo: PhotoInput = PhotoInput.Keep,
 ) {
     val isBlank: Boolean get() = name.isBlank() && address.isBlank()
@@ -91,6 +94,7 @@ data class PlaceInput(
             city = place.city,
             timeZoneId = place.timeZoneId,
             osmId = place.osmId,
+            openingHours = place.openingHours,
         )
     }
 }

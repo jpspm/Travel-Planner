@@ -1,6 +1,9 @@
 package com.jpspm.travelplanner.data.remote
 
+import com.jpspm.travelplanner.core.geo.distanceKm
+import com.jpspm.travelplanner.domain.repository.Attraction
 import com.jpspm.travelplanner.domain.repository.LatLng
+import com.jpspm.travelplanner.domain.repository.PlaceDetails
 import com.jpspm.travelplanner.domain.repository.PlaceCandidate
 import com.jpspm.travelplanner.domain.repository.PlaceSearch
 import com.jpspm.travelplanner.domain.repository.PlaceSearchException
@@ -73,22 +76,62 @@ class OpenPlaceSearch(
         return parseNominatim(body)
     }
 
-    override suspend fun photoFor(candidate: PlaceCandidate): RemotePhoto? {
-        val wikidata = candidate.wikidata ?: candidate.osmId?.let { lookupWikidata(it) }
+    override suspend fun details(candidate: PlaceCandidate): PlaceDetails {
+        // Resultados do Photon não trazem extratags: uma consulta ao Nominatim traz wikidata e horário juntos.
+        val extratags = if (candidate.wikidata == null && candidate.openingHours == null) {
+            candidate.osmId?.let { lookupExtratags(it) }
+        } else null
+        val wikidata = candidate.wikidata ?: extratags?.str("wikidata")
+        val openingHours = candidate.openingHours ?: extratags?.str("opening_hours")
         val fileName = wikidata?.let { wikidataImage(it) } ?: nearbyWikipediaImage(candidate)
-        return fileName?.let { commonsImage(it) }
+        return PlaceDetails(photo = fileName?.let { commonsImage(it) }, openingHours = openingHours)
     }
+
+    override suspend fun photoForFile(fileName: String): RemotePhoto? = commonsImage(fileName)
+
+    override suspend fun nearby(center: LatLng, radiusMeters: Int): List<Attraction> {
+        val body = getText("https://pt.wikipedia.org/w/api.php") {
+            parameter("action", "query")
+            parameter("generator", "geosearch")
+            parameter("ggscoord", "${center.latitude}|${center.longitude}")
+            parameter("ggsradius", radiusMeters.coerceIn(10, 10_000))
+            parameter("ggslimit", 30)
+            parameter("prop", "pageimages|coordinates|info")
+            parameter("piprop", "thumbnail|name")
+            parameter("pithumbsize", 240)
+            parameter("inprop", "url")
+            parameter("format", "json")
+            parameter("formatversion", 2)
+        }
+        return parseNearby(body, center)
+    }
+
+    internal fun parseNearby(body: String, center: LatLng): List<Attraction> =
+        json.parseToJsonElement(body).jsonObject.obj("query")?.arr("pages").orEmpty().mapNotNull { element ->
+            val page = element.jsonObject
+            val coords = page.arr("coordinates")?.firstOrNull()?.jsonObject ?: return@mapNotNull null
+            val lat = (coords["lat"] as? JsonPrimitive)?.doubleOrNull ?: return@mapNotNull null
+            val lon = (coords["lon"] as? JsonPrimitive)?.doubleOrNull ?: return@mapNotNull null
+            val position = LatLng(lat, lon)
+            Attraction(
+                title = page.str("title") ?: return@mapNotNull null,
+                position = position,
+                distanceMeters = (distanceKm(center, position) * 1000).toInt(),
+                thumbnailUrl = page.obj("thumbnail")?.str("source"),
+                imageFile = page.str("pageimage"),
+                pageUrl = page.str("fullurl"),
+            )
+        }.sortedBy { it.distanceMeters }
 
     override suspend fun download(url: String): ByteArray = request(url).bodyAsBytes()
 
-    private suspend fun lookupWikidata(osmId: String): String? {
+    private suspend fun lookupExtratags(osmId: String): JsonObject? {
         val body = nominatim("https://nominatim.openstreetmap.org/lookup") {
             parameter("osm_ids", osmId)
             parameter("format", "jsonv2")
             parameter("extratags", 1)
         }
-        return json.parseToJsonElement(body).jsonArray.firstOrNull()
-            ?.jsonObject?.obj("extratags")?.str("wikidata")
+        return json.parseToJsonElement(body).jsonArray.firstOrNull()?.jsonObject?.obj("extratags")
     }
 
     private suspend fun wikidataImage(entity: String): String? {
@@ -212,6 +255,7 @@ class OpenPlaceSearch(
                 osmId = r.str("osm_type")?.firstOrNull()?.uppercaseChar()?.let { type -> r.str("osm_id")?.let { "$type$it" } },
                 wikidata = r.obj("extratags")?.str("wikidata"),
                 city = city,
+                openingHours = r.obj("extratags")?.str("opening_hours"),
             )
         }.distinctBy { it.osmId ?: "${it.name}|${it.latitude}|${it.longitude}" }
 }

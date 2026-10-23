@@ -73,7 +73,7 @@ class OpenPlaceSearchTest {
                 else -> null
             }
         }
-        val photo = search.photoFor(candidate(wikidata = "Q10285"))!!
+        val photo = search.details(candidate(wikidata = "Q10285")).photo!!
         assertEquals("https://upload.wikimedia.org/thumb/1280px-Colosseo_2020.jpg", photo.url)
         assertEquals("Diliff", photo.author)
         assertEquals("CC BY-SA 4.0", photo.license)
@@ -91,14 +91,47 @@ class OpenPlaceSearchTest {
             }
         }
         // Sem wikidata e sem osmId: vai direto para a geobusca na Wikipédia.
-        val photo = search.photoFor(candidate(wikidata = null, osmId = null))
+        val photo = search.details(candidate(wikidata = null, osmId = null)).photo
         assertEquals("CC BY-SA 4.0", photo?.license)
     }
 
     @Test
     fun noPhotoWhenNothingFound() = runTest {
         val (search, _) = searchWith { url -> if ("pt.wikipedia.org" in url) """{"batchcomplete":true}""" else null }
-        assertNull(search.photoFor(candidate(wikidata = null, osmId = null)))
+        assertNull(search.details(candidate(wikidata = null, osmId = null)).photo)
+    }
+
+    @Test
+    fun openingHoursFromNominatimSearch() = runTest {
+        val (search, _) = searchWith { NOMINATIM }
+        assertEquals("Mo-Su 08:30-19:00", search.search("Coliseu", null).single().openingHours)
+    }
+
+    @Test
+    fun photonResultGetsWikidataAndOpeningHoursInOneLookup() = runTest {
+        val (search, requested) = searchWith { url ->
+            when {
+                "nominatim.openstreetmap.org/lookup" in url -> LOOKUP
+                "wikidata.org" in url -> WIKIDATA
+                "commons.wikimedia.org" in url -> COMMONS
+                else -> null
+            }
+        }
+        val details = search.details(candidate(wikidata = null))
+        assertEquals("Mo-Fr 09:00-18:00; Su off", details.openingHours)
+        assertEquals("Diliff", details.photo?.author)
+        assertEquals(1, requested.count { "nominatim" in it }, "uma consulta só ao Nominatim")
+    }
+
+    @Test
+    fun nearbyAttractionsSortedByDistance() = runTest {
+        val (search, requested) = searchWith { NEARBY }
+        val list = search.nearby(LatLng(41.8902, 12.4924))
+        assertEquals(listOf("Arco de Constantino", "Fórum Romano"), list.map { it.title })
+        assertTrue(list[0].distanceMeters < list[1].distanceMeters)
+        assertEquals("https://upload.wikimedia.org/arco.jpg", list[0].thumbnailUrl)
+        assertEquals("Arco.jpg", list[0].imageFile)
+        assertTrue("ggscoord=41.8902%7C12.4924" in requested.single() || "ggscoord=41.8902|12.4924" in requested.single())
     }
 
     @Test
@@ -130,7 +163,17 @@ class OpenPlaceSearchTest {
         [{"osm_type":"way","osm_id":215801333,"lat":"41.8902","lon":"12.4924","name":"Coliseu",
           "display_name":"Coliseu, Piazza del Colosseo, Roma",
           "address":{"road":"Piazza del Colosseo","suburb":"Celio","city":"Roma","state":"Lácio","country":"Itália","country_code":"it"},
-          "extratags":{"wikidata":"Q10285"}}]"""
+          "extratags":{"wikidata":"Q10285","opening_hours":"Mo-Su 08:30-19:00"}}]"""
+
+        const val LOOKUP = """[{"osm_type":"way","osm_id":215801333,"extratags":{"wikidata":"Q10285","opening_hours":"Mo-Fr 09:00-18:00; Su off"}}]"""
+
+        const val NEARBY = """
+        {"batchcomplete":true,"query":{"pages":[
+          {"pageid":3,"title":"Fórum Romano","coordinates":[{"lat":41.8925,"lon":12.4853}],"fullurl":"https://pt.wikipedia.org/wiki/F%C3%B3rum_Romano"},
+          {"pageid":1,"title":"Arco de Constantino","coordinates":[{"lat":41.8898,"lon":12.4906}],
+           "thumbnail":{"source":"https://upload.wikimedia.org/arco.jpg","width":240,"height":160},"pageimage":"Arco.jpg",
+           "fullurl":"https://pt.wikipedia.org/wiki/Arco_de_Constantino"},
+          {"pageid":2,"title":"Sem coordenadas"}]}}"""
 
         const val WIKIDATA = """
         {"claims":{"P18":[{"mainsnak":{"datavalue":{"value":"Colosseo 2020.jpg","type":"string"}}}]}}"""
