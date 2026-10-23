@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Textos usados pelo próprio Android (widget e canal de notificações), fora do Compose. -->
+<resources>
+    <string name="widget_label">Travel Planner</string>
+    <string name="widget_description">A viagem de hoje: próximo compromisso e ingressos do dia.</string>
+    <string name="reminder_channel_name">Lembretes da viagem</string>
+    <string name="reminder_channel_description">Avisos antes de voos, trens, reservas e atividades.</string>
+</resources>

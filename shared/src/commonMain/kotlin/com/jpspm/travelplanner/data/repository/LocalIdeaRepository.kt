@@ -8,6 +8,7 @@ import com.jpspm.travelplanner.data.local.ActivityEntity
 import com.jpspm.travelplanner.data.local.AppDatabase
 import com.jpspm.travelplanner.data.local.IdeaEntity
 import com.jpspm.travelplanner.data.local.toDomain
+import com.jpspm.travelplanner.domain.model.ReservationType
 import com.jpspm.travelplanner.domain.repository.Idea
 import com.jpspm.travelplanner.domain.repository.IdeaInput
 import com.jpspm.travelplanner.domain.repository.IdeaRepository
@@ -15,6 +16,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.datetime.LocalDate
 import kotlin.time.Clock
+
+private const val ACTIVITY = "ACTIVITY"
+
+private fun kindOf(value: String): ReservationType? =
+    if (value == ACTIVITY) null else runCatching { ReservationType.valueOf(value) }.getOrNull()
 
 class LocalIdeaRepository(
     private val db: AppDatabase,
@@ -26,13 +32,13 @@ class LocalIdeaRepository(
     override fun observe(tripId: String): Flow<List<Idea>> =
         combine(db.ideaDao().observeByTrip(tripId), db.placeDao().observeByTrip(tripId)) { ideas, placeList ->
             val placeMap = placeList.associate { it.id to it.toDomain(files) }
-            ideas.map { Idea(it.id, it.tripId, it.title, it.notes, it.placeId?.let(placeMap::get)) }
+            ideas.map { Idea(it.id, it.tripId, it.title, it.notes, it.placeId?.let(placeMap::get), kindOf(it.kind)) }
         }
 
     override suspend fun get(id: String): Idea? {
         val entity = db.ideaDao().get(id) ?: return null
         val place = entity.placeId?.let { db.placeDao().get(it) }?.toDomain(files)
-        return Idea(entity.id, entity.tripId, entity.title, entity.notes, place)
+        return Idea(entity.id, entity.tripId, entity.title, entity.notes, place, kindOf(entity.kind))
     }
 
     override suspend fun save(tripId: String, id: String?, input: IdeaInput): String {
@@ -47,6 +53,7 @@ class LocalIdeaRepository(
             placeId = placeId,
             createdAt = current?.createdAt ?: now,
             updatedAt = now,
+            kind = input.kind?.name ?: ACTIVITY,
         )
         db.ideaDao().upsert(entity)
         if (current?.placeId != null && placeId == null) places.cleanupUnused(tripId)

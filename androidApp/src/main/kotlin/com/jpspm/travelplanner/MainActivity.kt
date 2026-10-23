@@ -1,12 +1,14 @@
 package com.jpspm.travelplanner
 
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.jpspm.travelplanner.di.bindActivity
+import com.jpspm.travelplanner.di.onNewIntent as handleNewIntent
 import java.util.Locale
 
 class MainActivity : ComponentActivity() {
@@ -30,5 +32,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             App()
         }
+    }
+
+    /** Arquivo compartilhado com o app já aberto (RF-44). */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleNewIntent(this, intent)
     }
 }

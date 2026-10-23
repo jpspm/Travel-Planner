@@ -2,6 +2,14 @@ package com.jpspm.travelplanner.di
 
 import com.jpspm.travelplanner.data.backup.LocalBackupRepository
 import com.jpspm.travelplanner.data.export.HtmlExporter
+import com.jpspm.travelplanner.data.background.BackgroundSync
+import com.jpspm.travelplanner.data.background.HomeSummaryLoader
+import com.jpspm.travelplanner.data.background.IncomingShare
+import com.jpspm.travelplanner.ui.reminders.RemindersViewModel
+import com.jpspm.travelplanner.ui.share.ShareTargetViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import com.jpspm.travelplanner.data.files.FileStore
 import com.jpspm.travelplanner.ui.trip.BudgetViewModel
 import com.jpspm.travelplanner.ui.trip.ChecklistViewModel
@@ -66,6 +74,10 @@ val dataModule = module {
     single<ChecklistRepository> { LocalChecklistRepository(get(), get()) }
     single<IdeaRepository> { LocalIdeaRepository(get(), get(), get(), get()) }
     single { HtmlExporter(get(), get(), get(), get(), get(), get()) }
+    // Lembretes, widget e compartilhamento de entrada (RF-43 a RF-45).
+    single { IncomingShare() }
+    single { HomeSummaryLoader(get(), get(), get(), get(), get()) }
+    single { BackgroundSync(get(), get(), get(), get(), get(), CoroutineScope(SupervisorJob() + Dispatchers.Default)) }
 }
 
 val uiModule = module {
@@ -79,7 +91,7 @@ val uiModule = module {
     viewModel { params ->
         ReservationEditorViewModel(
             params[0], params.values.getOrNull(1) as String?, params.values.getOrNull(2) as String?,
-            params.values.getOrNull(3) as String?, get(), get(), get(),
+            params.values.getOrNull(3) as String?, params.values.getOrNull(4) as String?, get(), get(), get(), get(),
         )
     }
     viewModel { params -> ReservationDetailViewModel(params.get(), get(), get(), get()) }
@@ -87,14 +99,21 @@ val uiModule = module {
     viewModel { PlacePickerViewModel(get()) }
     viewModel { BackupViewModel(get()) }
     viewModel { HtmlExportViewModel(get()) }
+    viewModel { RemindersViewModel(get()) }
+    viewModel { ShareTargetViewModel(get(), get(), get()) }
     viewModel { params -> BudgetViewModel(params.get(), get(), get(), get()) }
     viewModel { params -> ChecklistViewModel(params.get(), get()) }
     viewModel { params -> IdeasViewModel(params.get(), get(), get()) }
     viewModel { params -> NearbyViewModel(params.get(), get(), get(), get(), get(), get(), get()) }
-    viewModel { params -> IdeaEditorViewModel(params[0], params.values.getOrNull(1) as String?, get(), get()) }
+    viewModel { params ->
+        IdeaEditorViewModel(params[0], params.values.getOrNull(1) as String?, params.values.getOrNull(2) as String?, get(), get())
+    }
 }
 
 /** [platformModule] fornece o [com.jpspm.travelplanner.data.local.AppDatabase] da plataforma. */
 fun initKoin(platformModule: Module): KoinApplication = startKoin {
     modules(platformModule, dataModule, uiModule)
+}.also {
+    // Reagenda lembretes e atualiza o widget sempre que o roteiro mudar.
+    it.koin.get<BackgroundSync>().start()
 }

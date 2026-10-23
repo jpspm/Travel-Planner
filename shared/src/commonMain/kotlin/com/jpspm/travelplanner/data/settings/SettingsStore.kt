@@ -1,5 +1,6 @@
 package com.jpspm.travelplanner.data.settings
 
+import com.jpspm.travelplanner.domain.reminders.ReminderSettings
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.div
@@ -28,7 +29,23 @@ data class AppSettings(
     val backupReminderSnoozedUntil: Long? = null,
     /** Avisos de conflito dispensados pelo usuário, como `<tripId>:<chave do conflito>` (RNF-26). */
     val dismissedConflicts: Set<String> = emptySet(),
-)
+    /** Lembretes (RF-43): tipos ligados e antecedência em minutos. */
+    val reminderTransitEnabled: Boolean = true,
+    val reminderTransitMinutes: Int = 180,
+    val reminderReservationEnabled: Boolean = true,
+    val reminderReservationMinutes: Int = 60,
+    val reminderActivityEnabled: Boolean = true,
+    val reminderActivityMinutes: Int = 30,
+    /** A permissão de notificação já foi pedida uma vez (Android 13+). */
+    val notificationPermissionAsked: Boolean = false,
+) {
+    val reminders: ReminderSettings
+        get() = ReminderSettings(
+            reminderTransitEnabled, reminderTransitMinutes,
+            reminderReservationEnabled, reminderReservationMinutes,
+            reminderActivityEnabled, reminderActivityMinutes,
+        )
+}
 
 class SettingsStore(private val root: () -> PlatformFile = { FileKit.filesDir }) {
 

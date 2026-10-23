@@ -31,6 +31,10 @@ import com.jpspm.travelplanner.ui.backup.BackupDialogs
 import com.jpspm.travelplanner.ui.backup.BackupReminderCard
 import com.jpspm.travelplanner.ui.backup.BackupViewModel
 import com.jpspm.travelplanner.ui.backup.rememberBackupImportLauncher
+import com.jpspm.travelplanner.ui.reminders.AskNotificationPermissionOnce
+import com.jpspm.travelplanner.ui.reminders.RemindersDialog
+import com.jpspm.travelplanner.ui.reminders.RemindersViewModel
+import com.jpspm.travelplanner.resources.reminders_title
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -87,7 +91,11 @@ fun TripsScreen(
     onOpenAttachment: (String) -> Unit,
     viewModel: TripsViewModel = koinViewModel(),
     backupViewModel: BackupViewModel = koinViewModel(),
+    remindersViewModel: RemindersViewModel = koinViewModel(),
 ) {
+    var showReminders by remember { mutableStateOf(false) }
+    AskNotificationPermissionOnce(remindersViewModel)
+    if (showReminders) RemindersDialog(remindersViewModel, onDismiss = { showReminders = false })
     val state by viewModel.state.collectAsStateWithLifecycle()
     val showBackupReminder by backupViewModel.reminder.collectAsStateWithLifecycle()
     val importLauncher = rememberBackupImportLauncher(backupViewModel)
@@ -110,6 +118,10 @@ fun TripsScreen(
                         DropdownMenuItem(
                             text = { Text(stringResource(Res.string.backup_import)) },
                             onClick = { menuOpen = false; importLauncher.launch() },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(Res.string.reminders_title)) },
+                            onClick = { menuOpen = false; showReminders = true },
                         )
                     }
                 },

@@ -102,6 +102,8 @@ data class ReservationInput(
     val priceCents: Long?,
     val notes: String,
     val details: Map<String, String>,
+    /** Reaproveita um lugar já salvo (com foto), por exemplo o de uma ideia levada para o roteiro. */
+    val reusePlaceId: String? = null,
 )
 
 interface ReservationRepository {

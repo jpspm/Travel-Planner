@@ -355,6 +355,7 @@
     <string name="idea_new_title">Nova ideia</string>
     <string name="idea_edit_title">Editar ideia</string>
     <string name="idea_title">O que fazer</string>
+    <string name="idea_pick_kind">Que tipo de ideia?</string>
     <string name="idea_schedule">Levar para o roteiro</string>
     <string name="idea_delete_title">Excluir ideia?</string>
     <string name="idea_delete_message">“%1$s” será removida da lista de ideias.</string>
@@ -384,4 +385,34 @@
     <string name="nearby_offline">Sem conexão. As atrações por perto precisam de internet.</string>
     <string name="nearby_no_reference">Busque o lugar de uma hospedagem, cidade ou atividade para ver o que tem por perto.</string>
     <string name="nearby_source">Fonte: Wikipédia (páginas a até 1,5 km). Distância em linha reta.</string>
+
+    <!-- Lembretes (RF-43) -->
+    <string name="reminders_title">Lembretes</string>
+    <string name="reminders_transit">Voos e trens</string>
+    <string name="reminders_reservations">Outras reservas (check-in, eventos, restaurantes, carro)</string>
+    <string name="reminders_activities">Atividades com horário</string>
+    <string name="reminders_no_permission">As notificações estão bloqueadas para este app.</string>
+    <string name="reminders_allow">Permitir notificações</string>
+    <string name="reminders_battery_hint">Os avisos podem atrasar alguns minutos por economia de bateria. Se não chegarem, libere o app nas configurações de bateria do celular.</string>
+    <string name="reminder_title">Em %1$s: %2$s</string>
+    <string name="reminder_text">%1$s · %2$s</string>
+
+    <!-- Widget "Hoje" (RF-45) -->
+    <string name="widget_no_trip">Nenhuma viagem marcada</string>
+    <plurals name="widget_starts_in">
+        <item quantity="one">Começa em %1$d dia</item>
+        <item quantity="other">Começa em %1$d dias</item>
+    </plurals>
+    <plurals name="widget_tickets">
+        <item quantity="one">🎫 %1$d ingresso/passagem hoje</item>
+        <item quantity="other">🎫 %1$d ingressos/passagens hoje</item>
+    </plurals>
+
+    <!-- Receber arquivos de outros apps (RF-44) -->
+    <string name="share_title">Anexar a qual reserva?</string>
+    <plurals name="share_subtitle">
+        <item quantity="one">%1$d arquivo: %2$s</item>
+        <item quantity="other">%1$d arquivos: %2$s</item>
+    </plurals>
+    <string name="share_no_reservations">Nenhuma reserva cadastrada. Crie a reserva primeiro e depois compartilhe o arquivo de novo.</string>
 </resources>

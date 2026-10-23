@@ -42,11 +42,13 @@ fun AddItemSheet(
     onActivity: (LocalDate?) -> Unit,
     onReservation: (ReservationType, LocalDate?) -> Unit,
     onDismiss: () -> Unit,
+    /** Título no lugar do padrão (ex.: "Que tipo de ideia?"). */
+    title: String? = null,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.verticalScroll(rememberScrollState()).navigationBarsPadding().padding(bottom = 16.dp)) {
             Text(
-                request.date?.let { stringResource(Res.string.add_on_date, TimeFormat.weekdayDayMonth(it)) }
+                title ?: request.date?.let { stringResource(Res.string.add_on_date, TimeFormat.weekdayDayMonth(it)) }
                     ?: stringResource(Res.string.reservation_pick_type),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),

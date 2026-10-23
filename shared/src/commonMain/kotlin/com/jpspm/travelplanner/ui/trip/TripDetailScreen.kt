@@ -115,6 +115,8 @@ fun TripDetailScreen(
     onNewDestination: () -> Unit,
     onOpenCity: (String) -> Unit,
     onOpenIdea: (String?) -> Unit,
+    onNewIdea: (kind: String?) -> Unit,
+    onScheduleIdeaAsReservation: (ideaId: String, type: ReservationType, date: String) -> Unit,
     onOpenNearby: () -> Unit,
     viewModel: TripDetailViewModel = koinViewModel { parametersOf(tripId) },
     backupViewModel: BackupViewModel = koinViewModel(),
@@ -126,6 +128,7 @@ fun TripDetailScreen(
     val trip = state.trip
     var tab by rememberSaveable { mutableStateOf<TripTab?>(null) }
     var addingExpense by remember { mutableStateOf(false) }
+    var choosingIdeaKind by remember { mutableStateOf(false) }
     val htmlExport: HtmlExportViewModel = koinViewModel()
     HtmlExportEffects(htmlExport)
     var menuOpen by remember { mutableStateOf(false) }
@@ -230,7 +233,7 @@ fun TripDetailScreen(
                 TripTab.RESERVATIONS -> Res.string.fab_reservation to { adding = AddRequest(null, includeActivity = false) }
                 TripTab.CITIES -> Res.string.fab_city to onNewDestination
                 TripTab.BUDGET -> Res.string.fab_expense to { addingExpense = true }
-                TripTab.IDEAS -> Res.string.fab_idea to { onOpenIdea(null) }
+                TripTab.IDEAS -> Res.string.fab_idea to { choosingIdeaKind = true }
                 TripTab.SUMMARY, TripTab.CHECKLIST -> null
             }
             fab?.let { (label, action) ->
@@ -286,6 +289,7 @@ fun TripDetailScreen(
                 defaultDate = itineraryDay ?: state.today?.takeIf { it in trip.startDate..trip.endDate } ?: trip.startDate,
                 onOpenIdea = onOpenIdea,
                 onOpenNearby = onOpenNearby,
+                onScheduleReservation = { ideaId, type, date -> onScheduleIdeaAsReservation(ideaId, type, date.toString()) },
                 modifier = modifier,
             )
         }
@@ -323,6 +327,15 @@ fun TripDetailScreen(
             onPlace = { choosingCover = false; viewModel.setCoverFromPlace(it.id) },
             onGallery = { choosingCover = false; coverPicker.launch() },
             onDismiss = { choosingCover = false },
+        )
+    }
+    if (choosingIdeaKind) {
+        AddItemSheet(
+            request = AddRequest(date = null, includeActivity = true),
+            onActivity = { choosingIdeaKind = false; onNewIdea(null) },
+            onReservation = { type, _ -> choosingIdeaKind = false; onNewIdea(type.name) },
+            onDismiss = { choosingIdeaKind = false },
+            title = stringResource(Res.string.idea_pick_kind),
         )
     }
     adding?.let { request ->

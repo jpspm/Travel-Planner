@@ -249,4 +249,6 @@ data class IdeaEntity(
     val placeId: String?,
     val createdAt: Long,
     val updatedAt: Long,
+    /** `ACTIVITY` ou o nome de um [com.jpspm.travelplanner.domain.model.ReservationType]. Versão 7 do banco. */
+    @ColumnInfo(defaultValue = "ACTIVITY") val kind: String = "ACTIVITY",
 )

@@ -430,7 +430,7 @@ class LocalReservationRepository(
     override suspend fun save(tripId: String, id: String?, input: ReservationInput): String {
         val now = clock.millis()
         val current = id?.let { db.reservationDao().get(it) }
-        val placeId = if (input.type.hasPlace) places.write(tripId, current?.placeId, input.place) else null
+        val placeId = if (input.type.hasPlace) places.write(tripId, current?.placeId ?: input.reusePlaceId, input.place) else null
         val end = input.end.takeIf { input.type.hasEnd }
         val entity = ReservationEntity(
             id = current?.id ?: newId(),

@@ -2,6 +2,7 @@ package com.jpspm.travelplanner.domain.repository
 
 import com.jpspm.travelplanner.domain.model.Place
 import com.jpspm.travelplanner.domain.model.PlaceInput
+import com.jpspm.travelplanner.domain.model.ReservationType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 
@@ -12,9 +13,11 @@ data class Idea(
     val title: String,
     val notes: String,
     val place: Place?,
+    /** Mesmas categorias do roteiro: `null` = atividade; senão, o tipo de reserva (ex.: ingresso). */
+    val kind: ReservationType? = null,
 )
 
-data class IdeaInput(val title: String, val notes: String, val place: PlaceInput)
+data class IdeaInput(val title: String, val notes: String, val place: PlaceInput, val kind: ReservationType? = null)
 
 interface IdeaRepository {
     fun observe(tripId: String): Flow<List<Idea>>

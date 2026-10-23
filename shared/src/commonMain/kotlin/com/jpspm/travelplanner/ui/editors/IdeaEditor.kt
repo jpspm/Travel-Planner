@@ -27,6 +27,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jpspm.travelplanner.domain.model.Destination
 import com.jpspm.travelplanner.domain.model.PlaceInput
+import com.jpspm.travelplanner.domain.model.ReservationType
+import com.jpspm.travelplanner.resources.add_activity
+import com.jpspm.travelplanner.ui.components.emoji
+import com.jpspm.travelplanner.ui.components.label
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material3.FilterChip
 import com.jpspm.travelplanner.domain.repository.DestinationRepository
 import com.jpspm.travelplanner.domain.repository.IdeaInput
 import com.jpspm.travelplanner.domain.repository.IdeaRepository
@@ -57,17 +63,19 @@ data class IdeaForm(
     val title: String = "",
     val notes: String = "",
     val place: PlaceDraft? = null,
+    val kind: ReservationType? = null,
     val showErrors: Boolean = false,
 )
 
 class IdeaEditorViewModel(
     private val tripId: String,
     private val ideaId: String?,
+    initialKind: String?,
     private val ideas: IdeaRepository,
     private val destinationsRepo: DestinationRepository,
 ) : ViewModel() {
 
-    var form by mutableStateOf(IdeaForm())
+    var form by mutableStateOf(IdeaForm(kind = initialKind?.let { runCatching { ReservationType.valueOf(it) }.getOrNull() }))
         private set
     var destinations by mutableStateOf(emptyList<Destination>())
         private set
@@ -76,7 +84,7 @@ class IdeaEditorViewModel(
     init {
         viewModelScope.launch {
             destinations = destinationsRepo.observeDestinations(tripId).first()
-            ideaId?.let { ideas.get(it) }?.let { form = IdeaForm(it.title, it.notes, PlaceDraft.of(it.place)) }
+            ideaId?.let { ideas.get(it) }?.let { form = IdeaForm(it.title, it.notes, PlaceDraft.of(it.place), it.kind) }
         }
     }
 
@@ -94,7 +102,7 @@ class IdeaEditorViewModel(
             return
         }
         viewModelScope.launch {
-            ideas.save(tripId, ideaId, IdeaInput(f.title, f.notes, f.place?.input ?: PlaceInput.None))
+            ideas.save(tripId, ideaId, IdeaInput(f.title, f.notes, f.place?.input ?: PlaceInput.None, f.kind))
             onDone()
         }
     }
@@ -110,8 +118,9 @@ class IdeaEditorViewModel(
 fun IdeaEditorScreen(
     tripId: String,
     ideaId: String?,
+    kind: String? = null,
     onBack: () -> Unit,
-    viewModel: IdeaEditorViewModel = koinViewModel { parametersOf(tripId, ideaId) },
+    viewModel: IdeaEditorViewModel = koinViewModel { parametersOf(tripId, ideaId, kind) },
 ) {
     val form = viewModel.form
     var confirmDelete by remember { mutableStateOf(false) }
@@ -135,6 +144,21 @@ fun IdeaEditorScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
         ) {
+            // Mesmas categorias do roteiro: atividade ou um tipo de reserva.
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                FilterChip(
+                    selected = form.kind == null,
+                    onClick = { viewModel.update { it.copy(kind = null) } },
+                    label = { Text("📍 ${stringResource(Res.string.add_activity)}") },
+                )
+                ReservationType.entries.forEach { type ->
+                    FilterChip(
+                        selected = form.kind == type,
+                        onClick = { viewModel.update { it.copy(kind = type) } },
+                        label = { Text("${type.emoji} ${stringResource(type.label)}") },
+                    )
+                }
+            }
             FormTextField(
                 label = stringResource(Res.string.idea_title),
                 value = form.title,

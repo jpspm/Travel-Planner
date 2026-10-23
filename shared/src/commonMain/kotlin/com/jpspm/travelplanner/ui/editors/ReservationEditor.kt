@@ -38,6 +38,7 @@ import com.jpspm.travelplanner.ui.place.PlaceField
 import com.jpspm.travelplanner.domain.model.ReservationField
 import com.jpspm.travelplanner.domain.model.ReservationType
 import com.jpspm.travelplanner.domain.repository.DestinationRepository
+import com.jpspm.travelplanner.domain.repository.IdeaRepository
 import com.jpspm.travelplanner.domain.repository.ReservationInput
 import com.jpspm.travelplanner.domain.repository.ReservationRepository
 import com.jpspm.travelplanner.domain.repository.TripRepository
@@ -146,6 +147,8 @@ class ReservationEditorViewModel(
     private val reservationId: String?,
     type: String?,
     initialDate: String?,
+    private val ideaId: String?,
+    private val ideas: IdeaRepository,
     private val trips: TripRepository,
     private val reservations: ReservationRepository,
     private val destinationsRepo: DestinationRepository,
@@ -156,6 +159,7 @@ class ReservationEditorViewModel(
     var destinations by mutableStateOf(emptyList<Destination>())
         private set
     val isNew get() = reservationId == null
+    private var ideaPlaceId: String? = null
 
     init {
         viewModelScope.launch {
@@ -179,9 +183,14 @@ class ReservationEditorViewModel(
                 // Aberta a partir de um dia do roteiro: o início já vem nesse dia.
                 val date = initialDate?.let(LocalDate::parse)
                 val zone = defaultTimeZoneFor(date ?: trips.getTrip(tripId)?.startDate, destinations)
+                val idea = ideaId?.let { ideas.get(it) }
+                ideaPlaceId = idea?.place?.id
                 form.copy(
-                    start = MomentForm(date = date, time = date?.let { form.type.defaultStartTime() }, timeZoneId = zone),
-                    end = MomentForm(timeZoneId = zone),
+                    start = MomentForm(date = date, time = date?.let { form.type.defaultStartTime() }, timeZoneId = idea?.place?.timeZoneId ?: zone),
+                    end = MomentForm(timeZoneId = idea?.place?.timeZoneId ?: zone),
+                    title = if (form.type.hasTitleField) idea?.title.orEmpty() else "",
+                    place = PlaceDraft.of(idea?.place),
+                    notes = idea?.notes.orEmpty(),
                 )
             }
         }
@@ -259,8 +268,11 @@ class ReservationEditorViewModel(
                     priceCents = Money.parse(f.price),
                     notes = f.notes,
                     details = f.details,
+                    reusePlaceId = f.place?.let { ideaPlaceId },
                 ),
             )
+            // A ideia virou reserva: sai da lista (o lugar continua, agora usado pela reserva).
+            ideaId?.let { ideas.delete(it) }
             f.removedAttachmentIds.forEach { reservations.deleteAttachment(it) }
             f.attachments.filterIsInstance<AttachmentDraft.New>().forEach { reservations.addAttachment(id, it.file, it.kind) }
             onDone(id)
@@ -275,9 +287,10 @@ fun ReservationEditorScreen(
     reservationId: String?,
     type: String?,
     date: String? = null,
+    ideaId: String? = null,
     onBack: () -> Unit,
     onSaved: (String) -> Unit,
-    viewModel: ReservationEditorViewModel = koinViewModel { parametersOf(tripId, reservationId, type, date) },
+    viewModel: ReservationEditorViewModel = koinViewModel { parametersOf(tripId, reservationId, type, date, ideaId) },
 ) {
     val form = viewModel.form
     val typeName = stringResource(form.type.label)

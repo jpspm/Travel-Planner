@@ -29,13 +29,18 @@ data class ReservationEditorRoute(
     val reservationId: String? = null,
     val type: String? = null,
     val date: String? = null,
+    /** Ideia sendo levada para o roteiro: preenche o formulário e sai da lista ao salvar. */
+    val ideaId: String? = null,
 )
+
+@Serializable
+data object ShareTargetRoute
 
 @Serializable
 data class NearbyRoute(val tripId: String)
 
 @Serializable
-data class IdeaEditorRoute(val tripId: String, val ideaId: String? = null)
+data class IdeaEditorRoute(val tripId: String, val ideaId: String? = null, val kind: String? = null)
 
 @Serializable
 data class ReservationDetailRoute(val reservationId: String)

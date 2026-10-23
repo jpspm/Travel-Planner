@@ -112,6 +112,10 @@ interface ActivityDao {
     @Query("SELECT * FROM activities WHERE tripId = :tripId")
     fun observeByTrip(tripId: String): Flow<List<ActivityEntity>>
 
+    /** Atividades com horário de todas as viagens, para os lembretes e o widget. */
+    @Query("SELECT * FROM activities WHERE startTime IS NOT NULL")
+    fun observeTimed(): Flow<List<ActivityEntity>>
+
     @Query("SELECT * FROM activities WHERE tripId = :tripId")
     suspend fun getByTrip(tripId: String): List<ActivityEntity>
 
@@ -141,6 +145,10 @@ interface ReservationDao {
 
     @Query("SELECT * FROM reservations WHERE tripId = :tripId")
     suspend fun getByTrip(tripId: String): List<ReservationEntity>
+
+    /** Reservas com data de todas as viagens, para os lembretes. */
+    @Query("SELECT * FROM reservations WHERE startDateTime IS NOT NULL")
+    fun observeDated(): Flow<List<ReservationEntity>>
 
     @Query("SELECT * FROM reservations WHERE id = :id")
     fun observe(id: String): Flow<ReservationEntity?>

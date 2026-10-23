@@ -28,6 +28,13 @@ import com.jpspm.travelplanner.ui.navigation.AttachmentViewerRoute
 import com.jpspm.travelplanner.ui.navigation.CityRoute
 import com.jpspm.travelplanner.ui.navigation.IdeaEditorRoute
 import com.jpspm.travelplanner.ui.navigation.NearbyRoute
+import com.jpspm.travelplanner.ui.navigation.ShareTargetRoute
+import com.jpspm.travelplanner.ui.share.ShareTargetScreen
+import com.jpspm.travelplanner.data.background.IncomingShare
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.navigation.NavDestination.Companion.hasRoute
 import com.jpspm.travelplanner.ui.trip.NearbyScreen
 import com.jpspm.travelplanner.ui.editors.IdeaEditorScreen
 import com.jpspm.travelplanner.ui.navigation.DestinationEditorRoute
@@ -58,6 +65,12 @@ fun App() {
     }
     TravelPlannerTheme {
         val nav = rememberNavController()
+        // Arquivos compartilhados de outro app abrem a escolha da reserva (RF-44).
+        val incoming = koinInject<IncomingShare>()
+        val sharedFiles by incoming.files.collectAsState()
+        LaunchedEffect(sharedFiles) {
+            if (sharedFiles.isNotEmpty() && nav.currentDestination?.hasRoute<ShareTargetRoute>() != true) nav.navigate(ShareTargetRoute)
+        }
         // Fundo do tema atrás das telas: nada de branco aparecendo durante as transições.
         Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
             NavHost(
@@ -102,7 +115,17 @@ fun App() {
                         onNewDestination = { nav.navigate(DestinationEditorRoute(tripId)) },
                         onOpenCity = { nav.navigate(CityRoute(tripId, it)) },
                     onOpenIdea = { nav.navigate(IdeaEditorRoute(tripId, it)) },
+                    onNewIdea = { kind -> nav.navigate(IdeaEditorRoute(tripId, kind = kind)) },
+                    onScheduleIdeaAsReservation = { ideaId, type, date ->
+                        nav.navigate(ReservationEditorRoute(tripId, type = type.name, date = date, ideaId = ideaId))
+                    },
                     onOpenNearby = { nav.navigate(NearbyRoute(tripId)) },
+                    )
+                }
+                screen<ShareTargetRoute> {
+                    ShareTargetScreen(
+                        onDone = { id -> nav.navigate(ReservationDetailRoute(id)) { popUpTo<ShareTargetRoute> { inclusive = true } } },
+                        onCancel = nav::back,
                     )
                 }
                 screen<NearbyRoute> { entry ->
@@ -110,7 +133,7 @@ fun App() {
                 }
                 screen<IdeaEditorRoute> { entry ->
                     val route = entry.toRoute<IdeaEditorRoute>()
-                    IdeaEditorScreen(route.tripId, route.ideaId, onBack = nav::back)
+                    IdeaEditorScreen(route.tripId, route.ideaId, route.kind, onBack = nav::back)
                 }
                 screen<CityRoute> { entry ->
                     val route = entry.toRoute<CityRoute>()
@@ -138,6 +161,7 @@ fun App() {
                         reservationId = route.reservationId,
                         type = route.type,
                         date = route.date,
+                    ideaId = route.ideaId,
                         onBack = nav::back,
                         onSaved = { id ->
                             // Reserva nova: abre o detalhe, onde se adicionam os anexos (QR code, PDF).

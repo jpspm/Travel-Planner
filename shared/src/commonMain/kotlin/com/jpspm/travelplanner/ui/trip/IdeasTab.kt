@@ -32,6 +32,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.jpspm.travelplanner.domain.city.CityGrouper
 import com.jpspm.travelplanner.domain.model.Destination
+import com.jpspm.travelplanner.domain.model.ReservationType
+import com.jpspm.travelplanner.resources.add_activity
+import com.jpspm.travelplanner.ui.components.TypeBadge
+import com.jpspm.travelplanner.ui.components.emoji
+import com.jpspm.travelplanner.ui.components.label
 import com.jpspm.travelplanner.domain.repository.DestinationRepository
 import com.jpspm.travelplanner.domain.repository.Idea
 import com.jpspm.travelplanner.domain.repository.IdeaRepository
@@ -88,6 +93,8 @@ fun IdeasTab(
     defaultDate: LocalDate,
     onOpenIdea: (String) -> Unit,
     onOpenNearby: () -> Unit,
+    /** Ideia de reserva levada para o roteiro: abre o formulário da reserva já preenchido. */
+    onScheduleReservation: (ideaId: String, type: ReservationType, date: LocalDate) -> Unit,
     modifier: Modifier,
     viewModel: IdeasViewModel = koinViewModel { parametersOf(tripId) },
 ) {
@@ -123,7 +130,14 @@ fun IdeasTab(
     }
 
     scheduling?.let { idea ->
-        DatePickerModal(initial = defaultDate, onPick = { viewModel.schedule(idea, it) }, onDismiss = { scheduling = null })
+        DatePickerModal(
+            initial = defaultDate,
+            onPick = { date ->
+                val kind = idea.kind
+                if (kind == null) viewModel.schedule(idea, date) else onScheduleReservation(idea.id, kind, date)
+            },
+            onDismiss = { scheduling = null },
+        )
     }
     deleting?.let { idea ->
         ConfirmDeleteDialog(
@@ -148,7 +162,11 @@ private fun IdeaRow(idea: Idea, onClick: () -> Unit, onSchedule: () -> Unit, onD
     var menu by remember { mutableStateOf(false) }
     ListItem(
         modifier = Modifier.clickable(onClick = onClick),
-        leadingContent = { PlacePhoto(idea.place?.photoPath, size = 52) },
+        leadingContent = {
+            if (idea.place?.photoPath != null) PlacePhoto(idea.place.photoPath, size = 52)
+            else TypeBadge(idea.kind?.emoji ?: "📍")
+        },
+        overlineContent = { Text(idea.kind?.let { stringResource(it.label) } ?: stringResource(Res.string.add_activity)) },
         headlineContent = { Text(idea.title, maxLines = 2, overflow = TextOverflow.Ellipsis) },
         supportingContent = {
             val place = idea.place
