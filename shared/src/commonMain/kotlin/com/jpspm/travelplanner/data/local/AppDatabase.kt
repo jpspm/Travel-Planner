@@ -25,10 +25,13 @@ import kotlinx.coroutines.IO
         CategoryBudgetEntity::class,
         ChecklistItemEntity::class,
         IdeaEntity::class,
+        TravelerEntity::class,
+        WeatherEntity::class,
+        ExchangeRateEntity::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7)],
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7), AutoMigration(from = 7, to = 8)],
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -43,6 +46,9 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun categoryBudgetDao(): CategoryBudgetDao
     abstract fun checklistDao(): ChecklistDao
     abstract fun ideaDao(): IdeaDao
+    abstract fun travelerDao(): TravelerDao
+    abstract fun weatherDao(): WeatherDao
+    abstract fun exchangeRateDao(): ExchangeRateDao
 
     companion object {
         const val FILE_NAME = "travel_planner.db"

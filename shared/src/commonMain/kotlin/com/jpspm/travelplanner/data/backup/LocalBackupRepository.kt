@@ -8,6 +8,7 @@ import com.jpspm.travelplanner.data.local.AppDatabase
 import com.jpspm.travelplanner.data.local.AttachmentEntity
 import com.jpspm.travelplanner.data.local.CategoryBudgetEntity
 import com.jpspm.travelplanner.data.local.ChecklistItemEntity
+import com.jpspm.travelplanner.data.local.TravelerEntity
 import com.jpspm.travelplanner.data.local.DestinationEntity
 import com.jpspm.travelplanner.data.local.ExpenseEntity
 import com.jpspm.travelplanner.data.local.IdeaEntity
@@ -69,6 +70,8 @@ data class BackupData(
     val checklist: List<ChecklistItemEntity> = emptyList(),
     /** Lista de ideias (desde a versão 5 do banco). */
     val ideas: List<IdeaEntity> = emptyList(),
+    /** Viajantes para dividir gastos (desde a versão 8 do banco). Previsão e cotações são cache e ficam de fora. */
+    val travelers: List<TravelerEntity> = emptyList(),
 )
 
 class LocalBackupRepository(
@@ -97,6 +100,7 @@ class LocalBackupRepository(
             categoryBudgets = ids.flatMap { db.categoryBudgetDao().getByTrip(it) },
             checklist = ids.flatMap { db.checklistDao().getByTrip(it) },
             ideas = ids.flatMap { db.ideaDao().getByTrip(it) },
+            travelers = ids.flatMap { db.travelerDao().getByTrip(it) },
         )
         val now = clock.now()
         val manifest = BackupManifest(BACKUP_SCHEMA_VERSION, APP_VERSION, now.toEpochMilliseconds(), ids)
@@ -149,6 +153,7 @@ class LocalBackupRepository(
                 data.categoryBudgets.forEach { e -> if (newer(e.updatedAt, db.categoryBudgetDao().get(e.tripId, e.category)?.updatedAt)) db.categoryBudgetDao().upsert(e) }
                 data.checklist.forEach { e -> if (newer(e.updatedAt, db.checklistDao().get(e.id)?.updatedAt)) db.checklistDao().upsert(e) }
                 data.ideas.forEach { e -> if (newer(e.updatedAt, db.ideaDao().get(e.id)?.updatedAt)) db.ideaDao().upsert(e) }
+                data.travelers.forEach { e -> if (newer(e.updatedAt, db.travelerDao().get(e.id)?.updatedAt)) db.travelerDao().upsert(e) }
             }
         }
         return data.trips.size

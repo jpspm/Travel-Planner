@@ -1,5 +1,6 @@
 package com.jpspm.travelplanner.data.local
 
+import com.jpspm.travelplanner.core.money.Currency
 import com.jpspm.travelplanner.core.time.ZonedLocal
 import com.jpspm.travelplanner.data.files.FileStore
 import com.jpspm.travelplanner.domain.model.Activity
@@ -101,6 +102,8 @@ internal fun ReservationEntity.toDomain(places: Map<String, Place>, attachments:
     notes = notes,
     details = decodeDetails(detailsJson),
     attachments = attachments,
+    priceCurrency = Currency.of(priceCurrency),
+    priceOriginalCents = priceOriginalCents,
 )
 
 private fun zoned(dateTime: String?, zone: String?): ZonedLocal? =

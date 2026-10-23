@@ -13,6 +13,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
@@ -28,29 +30,38 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
+import com.jpspm.travelplanner.core.money.Currency
 import com.jpspm.travelplanner.core.money.Money
+import com.jpspm.travelplanner.core.money.MoneyFormat
 import com.jpspm.travelplanner.core.time.TimeFormat
 import com.jpspm.travelplanner.domain.budget.BudgetCalculator
 import com.jpspm.travelplanner.domain.budget.BudgetLine
 import com.jpspm.travelplanner.domain.budget.BudgetSummary
 import com.jpspm.travelplanner.domain.budget.Expense
 import com.jpspm.travelplanner.domain.budget.ExpenseCategory
+import com.jpspm.travelplanner.domain.budget.Settlement
 import com.jpspm.travelplanner.domain.budget.SpendingItem
+import com.jpspm.travelplanner.domain.budget.SplitCalculator
+import com.jpspm.travelplanner.domain.budget.Traveler
 import com.jpspm.travelplanner.domain.repository.BudgetRepository
 import com.jpspm.travelplanner.domain.repository.ExpenseInput
 import com.jpspm.travelplanner.domain.repository.ReservationRepository
+import com.jpspm.travelplanner.domain.repository.TravelerRepository
 import com.jpspm.travelplanner.domain.repository.TripRepository
 import com.jpspm.travelplanner.resources.*
 import com.jpspm.travelplanner.ui.components.ConfirmDeleteDialog
 import com.jpspm.travelplanner.ui.components.DateField
 import com.jpspm.travelplanner.ui.components.EmptyState
 import com.jpspm.travelplanner.ui.components.FormTextField
+import com.jpspm.travelplanner.ui.components.MoneyInput
+import com.jpspm.travelplanner.ui.components.rememberRate
 import com.jpspm.travelplanner.ui.components.SectionHeader
 import com.jpspm.travelplanner.ui.components.TypeBadge
 import com.jpspm.travelplanner.ui.components.emoji
@@ -74,6 +85,8 @@ data class BudgetUiState(
     val categoryBudgets: Map<ExpenseCategory, Long> = emptyMap(),
     val tripStart: LocalDate? = null,
     val tripEnd: LocalDate? = null,
+    val travelers: List<Traveler> = emptyList(),
+    val settlement: Settlement = Settlement(emptyList(), emptyList()),
 )
 
 class BudgetViewModel(
@@ -81,6 +94,7 @@ class BudgetViewModel(
     private val budget: BudgetRepository,
     trips: TripRepository,
     reservations: ReservationRepository,
+    private val travelerRepo: TravelerRepository,
 ) : ViewModel() {
 
     val state: StateFlow<BudgetUiState> = combine(
@@ -88,16 +102,30 @@ class BudgetViewModel(
         budget.observeExpenses(tripId),
         budget.observeCategoryBudgets(tripId),
         reservations.observeReservations(tripId),
-    ) { trip, expenses, categoryBudgets, reservationList ->
+        travelerRepo.observe(tripId),
+    ) { trip, expenses, categoryBudgets, reservationList, travelers ->
+        val summary = BudgetCalculator.summarize(trip?.budgetTotalCents, categoryBudgets, expenses, reservationList)
         BudgetUiState(
             loading = false,
-            summary = BudgetCalculator.summarize(trip?.budgetTotalCents, categoryBudgets, expenses, reservationList),
+            summary = summary,
             plannedTotalCents = trip?.budgetTotalCents,
             categoryBudgets = categoryBudgets,
             tripStart = trip?.startDate,
             tripEnd = trip?.endDate,
+            travelers = travelers,
+            settlement = SplitCalculator.settle(
+                travelers,
+                expenses,
+                summary.items.filterIsInstance<SpendingItem.FromReservation>().map { it.amountCents },
+            ),
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BudgetUiState())
+
+    fun addTraveler(name: String) = viewModelScope.launch { travelerRepo.add(tripId, name) }
+
+    fun renameTraveler(id: String, name: String) = viewModelScope.launch { travelerRepo.rename(id, name) }
+
+    fun deleteTraveler(id: String) = viewModelScope.launch { travelerRepo.delete(id) }
 
     fun saveExpense(id: String?, input: ExpenseInput) = viewModelScope.launch { budget.saveExpense(tripId, id, input) }
 
@@ -141,6 +169,9 @@ fun BudgetTab(
     var editingBudget by remember { mutableStateOf(false) }
     var editingExpense by remember { mutableStateOf<Expense?>(null) }
     var deletingExpense by remember { mutableStateOf<Expense?>(null) }
+    var addingTraveler by remember { mutableStateOf(false) }
+    var editingTraveler by remember { mutableStateOf<Traveler?>(null) }
+    var deletingTraveler by remember { mutableStateOf<Traveler?>(null) }
     val summary = state.summary
 
     LazyColumn(contentPadding = PaddingValues(bottom = 96.dp), modifier = modifier) {
@@ -148,6 +179,22 @@ fun BudgetTab(
         if (summary.lines.isNotEmpty()) {
             item(key = "categories-header") { SectionHeader(stringResource(Res.string.budget_by_category)) }
             items(summary.lines, key = { "line:${it.category}" }) { CategoryLine(it) }
+        }
+        item(key = "travelers") {
+            TravelersCard(
+                travelers = state.travelers,
+                onAdd = { addingTraveler = true },
+                onEdit = { editingTraveler = it },
+            )
+        }
+        if (state.travelers.size >= 2) {
+            item(key = "settlement") {
+                SettlementCard(
+                    settlement = state.settlement,
+                    firstTraveler = state.travelers.first(),
+                    hasReservations = summary.items.any { it is SpendingItem.FromReservation },
+                )
+            }
         }
         item(key = "items-header") { SectionHeader(stringResource(Res.string.budget_expenses), Modifier.padding(top = 8.dp)) }
         if (summary.items.isEmpty() && !state.loading) {
@@ -190,6 +237,7 @@ fun BudgetTab(
         ExpenseDialog(
             expense = editingExpense,
             defaultDate = defaultDate,
+            travelers = state.travelers,
             onSave = { input ->
                 viewModel.saveExpense(editingExpense?.id, input)
                 editingExpense = null
@@ -207,6 +255,116 @@ fun BudgetTab(
             onDismiss = { deletingExpense = null },
         )
     }
+    if (addingTraveler || editingTraveler != null) {
+        TravelerDialog(
+            traveler = editingTraveler,
+            onSave = { name ->
+                editingTraveler?.let { viewModel.renameTraveler(it.id, name) } ?: viewModel.addTraveler(name)
+                addingTraveler = false
+                editingTraveler = null
+            },
+            onDelete = editingTraveler?.let { t -> { deletingTraveler = t; editingTraveler = null } },
+            onDismiss = { addingTraveler = false; editingTraveler = null },
+        )
+    }
+    deletingTraveler?.let { traveler ->
+        ConfirmDeleteDialog(
+            title = stringResource(Res.string.travelers_edit),
+            message = stringResource(Res.string.travelers_delete_message, traveler.name),
+            onConfirm = { viewModel.deleteTraveler(traveler.id) },
+            onDismiss = { deletingTraveler = null },
+        )
+    }
+}
+
+@Composable
+private fun TravelersCard(travelers: List<Traveler>, onAdd: () -> Unit, onEdit: (Traveler) -> Unit) {
+    Column(Modifier.fillMaxWidth()) {
+        SectionHeader(stringResource(Res.string.travelers_title), Modifier.padding(top = 8.dp))
+        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+            if (travelers.size < 2) {
+                Text(
+                    stringResource(Res.string.travelers_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                travelers.forEach { t -> AssistChip(onClick = { onEdit(t) }, label = { Text(t.name) }) }
+                AssistChip(onClick = onAdd, label = { Text("+ " + stringResource(Res.string.travelers_add)) })
+            }
+        }
+    }
+}
+
+@Composable
+private fun SettlementCard(settlement: Settlement, firstTraveler: Traveler, hasReservations: Boolean) {
+    Card(Modifier.fillMaxWidth().padding(16.dp)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(stringResource(Res.string.settle_title), style = MaterialTheme.typography.titleMedium)
+            settlement.balances.forEach { b ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(b.traveler.name, modifier = Modifier.weight(1f))
+                    val net = b.netCents
+                    Text(
+                        when {
+                            net > 0 -> stringResource(Res.string.settle_balance_receive, Money.format(net))
+                            net < 0 -> stringResource(Res.string.settle_balance_pay, Money.format(-net))
+                            else -> stringResource(Res.string.settle_balance_even)
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (net < 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            HorizontalDivider(Modifier.padding(vertical = 4.dp))
+            if (settlement.transfers.isEmpty()) {
+                Text(stringResource(Res.string.settle_all_even), style = MaterialTheme.typography.bodyMedium)
+            }
+            settlement.transfers.forEach { t ->
+                Text(
+                    "➡️ " + stringResource(Res.string.settle_transfer, t.from.name, Money.format(t.amountCents), t.to.name),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+            if (hasReservations) {
+                Text(
+                    stringResource(Res.string.settle_reservations_hint, firstTraveler.name),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TravelerDialog(traveler: Traveler?, onSave: (String) -> Unit, onDelete: (() -> Unit)?, onDismiss: () -> Unit) {
+    var name by remember { mutableStateOf(traveler?.name.orEmpty()) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(if (traveler == null) Res.string.travelers_add else Res.string.travelers_edit)) },
+        text = {
+            FormTextField(
+                label = stringResource(Res.string.travelers_name),
+                value = name,
+                onValueChange = { name = it },
+                capitalization = KeyboardCapitalization.Words,
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { if (name.isNotBlank()) onSave(name) }) { Text(stringResource(Res.string.action_save)) }
+        },
+        dismissButton = {
+            Row {
+                if (onDelete != null) {
+                    TextButton(onClick = onDelete) { Text(stringResource(Res.string.action_delete), color = MaterialTheme.colorScheme.error) }
+                }
+                TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) }
+            }
+        },
+    )
 }
 
 @Composable
@@ -268,11 +426,18 @@ private fun CategoryLine(line: BudgetLine) {
 private fun SpendingRow(item: SpendingItem, onClick: () -> Unit) {
     val (title, subtitle) = when (item) {
         is SpendingItem.Manual -> item.expense.description.ifBlank { stringResource(item.category.label) } to
-            "${stringResource(item.category.label)} · ${TimeFormat.weekdayDayMonth(item.expense.date)}"
+            listOfNotNull(
+                stringResource(item.category.label),
+                TimeFormat.weekdayDayMonth(item.expense.date),
+                item.expense.originalCents?.takeIf { item.expense.currency != Currency.BRL }
+                    ?.let { stringResource(Res.string.money_original, MoneyFormat.format(it, item.expense.currency)) },
+            ).joinToString(" · ")
         is SpendingItem.FromReservation -> item.reservation.title.ifBlank { stringResource(item.reservation.type.label) } to
             listOfNotNull(
                 stringResource(Res.string.budget_from_reservation),
                 item.date?.let(TimeFormat::weekdayDayMonth),
+                item.reservation.priceOriginalCents?.takeIf { item.reservation.priceCurrency != Currency.BRL }
+                    ?.let { stringResource(Res.string.money_original, MoneyFormat.format(it, item.reservation.priceCurrency)) },
             ).joinToString(" · ")
     }
     ListItem(
@@ -290,28 +455,36 @@ private fun SpendingRow(item: SpendingItem, onClick: () -> Unit) {
 private fun ExpenseDialog(
     expense: Expense?,
     defaultDate: LocalDate,
+    travelers: List<Traveler>,
     onSave: (ExpenseInput) -> Unit,
     onDelete: (() -> Unit)?,
     onDismiss: () -> Unit,
 ) {
-    var amount by remember { mutableStateOf(expense?.amountCents?.let(Money::toInput).orEmpty()) }
+    var amount by remember { mutableStateOf((expense?.originalCents ?: expense?.amountCents)?.let(Money::toInput).orEmpty()) }
+    var currency by remember { mutableStateOf(expense?.currency ?: Currency.BRL) }
+    val ids = travelers.map { it.id }
+    var paidBy by remember { mutableStateOf(expense?.paidBy?.takeIf { it in ids } ?: ids.firstOrNull()) }
+    var splitAmong by remember { mutableStateOf(expense?.splitAmong?.filter { it in ids }?.ifEmpty { null }?.toSet() ?: ids.toSet()) }
     var category by remember { mutableStateOf(expense?.category ?: ExpenseCategory.FOOD) }
     var date by remember { mutableStateOf(expense?.date ?: defaultDate) }
     var description by remember { mutableStateOf(expense?.description.orEmpty()) }
     var showErrors by remember { mutableStateOf(false) }
     val cents = Money.parse(amount)
+    val rate = rememberRate(currency, date)
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(if (expense == null) Res.string.expense_new else Res.string.expense_edit)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                FormTextField(
+                MoneyInput(
                     label = stringResource(Res.string.expense_amount),
-                    value = amount,
-                    onValueChange = { amount = it },
-                    keyboardType = KeyboardType.Decimal,
+                    amount = amount,
+                    onAmountChange = { amount = it },
+                    currency = currency,
+                    onCurrencyChange = { currency = it },
+                    rate = rate,
                     isError = showErrors && (cents == null || cents <= 0),
-                    supportingText = if (showErrors && (cents == null || cents <= 0)) stringResource(Res.string.error_invalid_price) else null,
+                    errorText = stringResource(Res.string.error_invalid_price),
                 )
                 FormTextField(
                     label = stringResource(Res.string.expense_description),
@@ -328,12 +501,46 @@ private fun ExpenseDialog(
                         )
                     }
                 }
+                if (travelers.size >= 2) {
+                    Text(stringResource(Res.string.expense_paid_by), style = MaterialTheme.typography.labelLarge)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        travelers.forEach { t ->
+                            FilterChip(selected = t.id == paidBy, onClick = { paidBy = t.id }, label = { Text(t.name) })
+                        }
+                    }
+                    Text(stringResource(Res.string.expense_split_among), style = MaterialTheme.typography.labelLarge)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        travelers.forEach { t ->
+                            FilterChip(
+                                selected = t.id in splitAmong,
+                                onClick = {
+                                    // Sempre fica ao menos uma pessoa na divisão.
+                                    splitAmong = if (t.id in splitAmong) (splitAmong - t.id).ifEmpty { splitAmong } else splitAmong + t.id
+                                },
+                                label = { Text(t.name) },
+                            )
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
             TextButton(onClick = {
+                val brl = cents?.let { rate.toBrl(it) }
                 if (cents == null || cents <= 0) showErrors = true
-                else onSave(ExpenseInput(cents, category, date, description))
+                else if (brl != null) onSave(
+                    ExpenseInput(
+                        amountCents = brl,
+                        category = category,
+                        date = date,
+                        description = description,
+                        currency = currency,
+                        originalCents = cents.takeIf { currency != Currency.BRL },
+                        paidBy = paidBy.takeIf { travelers.size >= 2 },
+                        // Todos marcados = vazio, para incluir quem entrar depois.
+                        splitAmong = if (splitAmong.containsAll(ids)) emptyList() else ids.filter { it in splitAmong },
+                    ),
+                )
             }) { Text(stringResource(Res.string.action_save)) }
         },
         dismissButton = {

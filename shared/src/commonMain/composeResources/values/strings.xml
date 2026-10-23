@@ -140,7 +140,7 @@
     <string name="field_address">Endereço</string>
     <string name="field_code">Código da reserva</string>
     <string name="field_locator">Localizador</string>
-    <string name="field_price">Valor pago (R$)</string>
+    <string name="field_price">Valor pago</string>
     <string name="section_place">Local</string>
     <string name="section_details">Detalhes</string>
     <string name="section_payment">Pagamento</string>
@@ -306,7 +306,7 @@
     <string name="budget_categories_hint">Opcional: quanto planeja gastar em cada categoria. Sem total, vale a soma das categorias.</string>
     <string name="expense_new">Novo gasto</string>
     <string name="expense_edit">Editar gasto</string>
-    <string name="expense_amount">Valor (R$)</string>
+    <string name="expense_amount">Valor</string>
     <string name="expense_description">Descrição</string>
     <string name="expense_delete_title">Excluir gasto?</string>
     <string name="expense_delete_message">O gasto de %1$s será removido.</string>
@@ -415,4 +415,32 @@
         <item quantity="other">%1$d arquivos: %2$s</item>
     </plurals>
     <string name="share_no_reservations">Nenhuma reserva cadastrada. Crie a reserva primeiro e depois compartilhe o arquivo de novo.</string>
+    <!-- Moedas (RF-48) -->
+    <string name="money_currency">Moeda</string>
+    <string name="money_rate_loading">Buscando a cotação…</string>
+    <string name="money_rate_preview">≈ %1$s · cotação de %2$s</string>
+    <string name="money_rate_offline">≈ %1$s · última cotação salva, de %2$s</string>
+    <string name="money_rate_missing">Sem cotação de %1$s. Conecte-se à internet para converter para reais.</string>
+    <string name="money_original">pago %1$s</string>
+    <!-- Divisão de gastos (RF-49) -->
+    <string name="travelers_title">Viajantes</string>
+    <string name="travelers_hint">Adicione quem viaja junto para dividir os gastos.</string>
+    <string name="travelers_add">Adicionar viajante</string>
+    <string name="travelers_name">Nome</string>
+    <string name="travelers_edit">Editar viajante</string>
+    <string name="travelers_delete_message">Os gastos pagos por %1$s passam a contar como pagos por quem está em primeiro na lista.</string>
+    <string name="expense_paid_by">Pago por</string>
+    <string name="expense_split_among">Dividir entre</string>
+    <string name="settle_title">Acerto de contas</string>
+    <string name="settle_balance_receive">recebe %1$s</string>
+    <string name="settle_balance_pay">deve %1$s</string>
+    <string name="settle_balance_even">quite</string>
+    <string name="settle_transfer">%1$s paga %2$s para %3$s</string>
+    <string name="settle_all_even">Tudo certo: ninguém deve nada.</string>
+    <string name="settle_reservations_hint">Reservas contam como pagas por %1$s e divididas entre todos.</string>
+    <!-- Calendário (RF-46) -->
+    <string name="trip_menu_share_ics">Exportar para o calendário (.ics)</string>
+    <string name="ics_export_failed">Não foi possível gerar o arquivo de calendário.</string>
+    <!-- Tempo (RF-47) -->
+    <string name="weather_credit">Previsão do tempo: Open-Meteo.com</string>
 </resources>

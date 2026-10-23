@@ -33,6 +33,7 @@ interface TripDao {
           UNION ALL SELECT MAX(updatedAt) FROM category_budgets
           UNION ALL SELECT MAX(updatedAt) FROM checklist_items
           UNION ALL SELECT MAX(updatedAt) FROM ideas
+          UNION ALL SELECT MAX(updatedAt) FROM travelers
         )
         """
     )
@@ -288,4 +289,57 @@ interface IdeaDao {
 
     @Query("DELETE FROM ideas WHERE id = :id")
     suspend fun delete(id: String)
+}
+
+@Dao
+interface TravelerDao {
+    @Query("SELECT * FROM travelers WHERE tripId = :tripId ORDER BY sortOrder ASC")
+    fun observeByTrip(tripId: String): Flow<List<TravelerEntity>>
+
+    @Query("SELECT * FROM travelers WHERE tripId = :tripId")
+    suspend fun getByTrip(tripId: String): List<TravelerEntity>
+
+    @Query("SELECT * FROM travelers WHERE id = :id")
+    suspend fun get(id: String): TravelerEntity?
+
+    @Query("SELECT COALESCE(MAX(sortOrder), -1) FROM travelers WHERE tripId = :tripId")
+    suspend fun maxSortOrder(tripId: String): Int
+
+    @Upsert
+    suspend fun upsert(traveler: TravelerEntity)
+
+    @Query("DELETE FROM travelers WHERE id = :id")
+    suspend fun delete(id: String)
+}
+
+@Dao
+interface WeatherDao {
+    @Query("SELECT * FROM weather_forecasts WHERE date >= :from AND date <= :to")
+    fun observeBetween(from: String, to: String): Flow<List<WeatherEntity>>
+
+    @Query("SELECT MIN(updatedAt) FROM weather_forecasts WHERE latitude = :lat AND longitude = :lon AND date >= :from AND date <= :to")
+    suspend fun oldestUpdate(lat: Double, lon: Double, from: String, to: String): Long?
+
+    @Upsert
+    suspend fun upsertAll(forecasts: List<WeatherEntity>)
+
+    /** Apaga previsões de dias que já passaram há mais de um mês. */
+    @Query("DELETE FROM weather_forecasts WHERE date < :before")
+    suspend fun deleteBefore(before: String)
+}
+
+@Dao
+interface ExchangeRateDao {
+    @Query("SELECT * FROM exchange_rates WHERE currency = :currency AND date = :date")
+    suspend fun get(currency: String, date: String): ExchangeRateEntity?
+
+    /** Cotação salva mais recente até a data, para usar sem internet. */
+    @Query("SELECT * FROM exchange_rates WHERE currency = :currency AND date <= :date ORDER BY date DESC LIMIT 1")
+    suspend fun latestUntil(currency: String, date: String): ExchangeRateEntity?
+
+    @Query("SELECT * FROM exchange_rates WHERE currency = :currency ORDER BY date DESC LIMIT 1")
+    suspend fun latest(currency: String): ExchangeRateEntity?
+
+    @Upsert
+    suspend fun upsert(rate: ExchangeRateEntity)
 }

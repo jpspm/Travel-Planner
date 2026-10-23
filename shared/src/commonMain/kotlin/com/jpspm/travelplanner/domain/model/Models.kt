@@ -1,5 +1,6 @@
 package com.jpspm.travelplanner.domain.model
 
+import com.jpspm.travelplanner.core.money.Currency
 import com.jpspm.travelplanner.core.time.ZonedLocal
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -182,6 +183,9 @@ data class Reservation(
     val notes: String,
     val details: Map<String, String>,
     val attachments: List<Attachment>,
+    /** Moeda em que foi paga; [priceCents] fica sempre em BRL (RF-48). */
+    val priceCurrency: Currency = Currency.BRL,
+    val priceOriginalCents: Long? = null,
 ) {
     fun detail(key: String): String = details[key].orEmpty()
 }

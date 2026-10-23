@@ -22,6 +22,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jpspm.travelplanner.core.money.Currency
 import com.jpspm.travelplanner.core.money.Money
 import com.jpspm.travelplanner.core.time.ZonedLocal
 import com.jpspm.travelplanner.domain.model.Destination
@@ -61,6 +62,9 @@ import com.jpspm.travelplanner.ui.components.BackButton
 import com.jpspm.travelplanner.ui.components.DateField
 import com.jpspm.travelplanner.ui.components.FieldRow
 import com.jpspm.travelplanner.ui.components.FormTextField
+import com.jpspm.travelplanner.ui.components.MoneyInput
+import com.jpspm.travelplanner.ui.components.RateState
+import com.jpspm.travelplanner.ui.components.rememberRate
 import com.jpspm.travelplanner.ui.components.SectionHeader
 import com.jpspm.travelplanner.ui.components.TimeField
 import com.jpspm.travelplanner.ui.components.TimeZoneField
@@ -121,6 +125,8 @@ data class ReservationForm(
     val end: MomentForm = MomentForm(),
     val confirmationCode: String = "",
     val price: String = "",
+    /** Moeda do valor digitado; ao salvar, o valor é convertido para BRL (RF-48). */
+    val priceCurrency: Currency = Currency.BRL,
     val notes: String = "",
     /** Anexos já salvos que continuam, e os novos escolhidos; só são gravados ao salvar. */
     val attachments: List<AttachmentDraft> = emptyList(),
@@ -175,7 +181,8 @@ class ReservationEditorViewModel(
                     start = MomentForm.of(existing.start, zone),
                     end = MomentForm.of(existing.end, existing.end?.timeZoneId ?: zone),
                     confirmationCode = existing.confirmationCode,
-                    price = existing.priceCents?.let(Money::toInput).orEmpty(),
+                    price = (existing.priceOriginalCents ?: existing.priceCents)?.let(Money::toInput).orEmpty(),
+                    priceCurrency = existing.priceCurrency,
                     notes = existing.notes,
                     attachments = existing.attachments.map { AttachmentDraft.Saved(it) },
                 )
@@ -249,9 +256,12 @@ class ReservationEditorViewModel(
         f.copy(end = end)
     }
 
-    fun save(onDone: (String) -> Unit) {
+    /** [rate] converte o valor pago para BRL; sem cotação de uma moeda estrangeira, não salva. */
+    fun save(rate: RateState, onDone: (String) -> Unit) {
         val f = form
-        if (!f.isValid) {
+        val cents = Money.parse(f.price)
+        val brl = cents?.let { rate.toBrl(it) }
+        if (!f.isValid || (cents != null && brl == null)) {
             form = f.copy(showErrors = true)
             return
         }
@@ -265,10 +275,12 @@ class ReservationEditorViewModel(
                     start = f.start.toZoned(),
                     end = f.end.toZoned(),
                     confirmationCode = f.confirmationCode,
-                    priceCents = Money.parse(f.price),
+                    priceCents = brl,
                     notes = f.notes,
                     details = f.details,
                     reusePlaceId = f.place?.let { ideaPlaceId },
+                    priceCurrency = if (cents == null) Currency.BRL else f.priceCurrency,
+                    priceOriginalCents = cents?.takeIf { f.priceCurrency != Currency.BRL },
                 ),
             )
             // A ideia virou reserva: sai da lista (o lugar continua, agora usado pela reserva).
@@ -294,6 +306,7 @@ fun ReservationEditorScreen(
 ) {
     val form = viewModel.form
     val typeName = stringResource(form.type.label)
+    val priceRate = rememberRate(form.priceCurrency, form.start.date)
     Scaffold(
         topBar = {
             TopAppBar(
@@ -302,7 +315,7 @@ fun ReservationEditorScreen(
                 },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
-                    TextButton(onClick = { viewModel.save(onSaved) }) { Text(stringResource(Res.string.action_save)) }
+                    TextButton(onClick = { viewModel.save(priceRate, onSaved) }) { Text(stringResource(Res.string.action_save)) }
                 },
             )
         },
@@ -383,13 +396,15 @@ fun ReservationEditorScreen(
             )
 
             SectionHeader(stringResource(Res.string.section_payment), Modifier.padding(top = 8.dp))
-            FormTextField(
+            MoneyInput(
                 label = stringResource(Res.string.field_price),
-                value = form.price,
-                onValueChange = { v -> viewModel.update { it.copy(price = v) } },
-                keyboardType = KeyboardType.Decimal,
+                amount = form.price,
+                onAmountChange = { v -> viewModel.update { it.copy(price = v) } },
+                currency = form.priceCurrency,
+                onCurrencyChange = { c -> viewModel.update { it.copy(priceCurrency = c) } },
+                rate = priceRate,
                 isError = form.showErrors && form.priceError,
-                supportingText = if (form.showErrors && form.priceError) stringResource(Res.string.error_invalid_price) else null,
+                errorText = stringResource(Res.string.error_invalid_price),
             )
         }
     }

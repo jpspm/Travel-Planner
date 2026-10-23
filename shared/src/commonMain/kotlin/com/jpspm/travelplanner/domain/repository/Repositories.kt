@@ -2,6 +2,7 @@
 
 package com.jpspm.travelplanner.domain.repository
 
+import com.jpspm.travelplanner.core.money.Currency
 import com.jpspm.travelplanner.core.time.ZonedLocal
 import com.jpspm.travelplanner.domain.model.Activity
 import com.jpspm.travelplanner.domain.model.Attachment
@@ -104,6 +105,8 @@ data class ReservationInput(
     val details: Map<String, String>,
     /** Reaproveita um lugar já salvo (com foto), por exemplo o de uma ideia levada para o roteiro. */
     val reusePlaceId: String? = null,
+    val priceCurrency: Currency = Currency.BRL,
+    val priceOriginalCents: Long? = null,
 )
 
 interface ReservationRepository {

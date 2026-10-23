@@ -1,5 +1,6 @@
 package com.jpspm.travelplanner.domain.budget
 
+import com.jpspm.travelplanner.core.money.Currency
 import com.jpspm.travelplanner.domain.model.Reservation
 import com.jpspm.travelplanner.domain.model.ReservationType
 import kotlinx.datetime.LocalDate
@@ -20,10 +21,18 @@ val ReservationType.expenseCategory: ExpenseCategory
 data class Expense(
     val id: String,
     val tripId: String,
+    /** Sempre em BRL; se o gasto foi em outra moeda, já convertido (RF-48). */
     val amountCents: Long,
     val category: ExpenseCategory,
     val date: LocalDate,
     val description: String,
+    val currency: Currency = Currency.BRL,
+    /** Valor na moeda original, quando não foi em BRL. */
+    val originalCents: Long? = null,
+    /** Viajante que pagou (RF-49); `null` = o primeiro. */
+    val paidBy: String? = null,
+    /** Viajantes que dividem; vazio = todos. */
+    val splitAmong: List<String> = emptyList(),
 )
 
 /** Um gasto da lista: avulso ou o valor pago de uma reserva (que entra automaticamente, RF-23). */

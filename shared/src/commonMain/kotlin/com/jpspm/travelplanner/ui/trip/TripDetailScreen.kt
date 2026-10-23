@@ -74,6 +74,8 @@ import com.jpspm.travelplanner.domain.model.Reservation
 import com.jpspm.travelplanner.domain.model.ReservationType
 import com.jpspm.travelplanner.domain.model.Trip
 import com.jpspm.travelplanner.resources.*
+import com.jpspm.travelplanner.domain.weather.DayForecast
+import com.jpspm.travelplanner.domain.weather.WeatherCodes
 import com.jpspm.travelplanner.ui.components.AgendaItemRow
 import com.jpspm.travelplanner.ui.components.BackButton
 import com.jpspm.travelplanner.ui.components.LoadingScreen
@@ -125,6 +127,7 @@ fun TripDetailScreen(
     var showStorage by remember { mutableStateOf(false) }
     var choosingCover by remember { mutableStateOf(false) }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val forecasts by viewModel.forecasts.collectAsStateWithLifecycle()
     val trip = state.trip
     var tab by rememberSaveable { mutableStateOf<TripTab?>(null) }
     var addingExpense by remember { mutableStateOf(false) }
@@ -203,6 +206,11 @@ fun TripDetailScreen(
                                 enabled = !htmlExport.exporting,
                             )
                             DropdownMenuItem(
+                                text = { Text(stringResource(Res.string.trip_menu_share_ics)) },
+                                onClick = { menuOpen = false; htmlExport.exportCalendar(tripId) },
+                                enabled = !htmlExport.exporting,
+                            )
+                            DropdownMenuItem(
                                 text = { Text(stringResource(Res.string.backup_export_trip)) },
                                 onClick = { menuOpen = false; backupViewModel.export(listOf(tripId)) },
                             )
@@ -260,6 +268,7 @@ fun TripDetailScreen(
                 days = state.days,
                 zoneNames = state.zoneNames,
                 today = state.today,
+                forecasts = forecasts,
                 onAddToDay = { adding = AddRequest(it, includeActivity = true) },
                 onVisibleDayChange = { itineraryDay = it },
                 onOpenActivity = onEditActivity,
@@ -354,6 +363,7 @@ private fun ItineraryTab(
     days: List<AgendaDay>,
     zoneNames: Map<String, String>,
     today: kotlinx.datetime.LocalDate?,
+    forecasts: Map<kotlinx.datetime.LocalDate, DayForecast>,
     onAddToDay: (kotlinx.datetime.LocalDate) -> Unit,
     onVisibleDayChange: (kotlinx.datetime.LocalDate?) -> Unit,
     onOpenActivity: (String) -> Unit,
@@ -455,7 +465,7 @@ private fun ItineraryTab(
         LazyColumn(state = listState, modifier = Modifier.weight(1f)) {
             days.forEach { day ->
                 item(key = "day:${day.date}") {
-                    DayHeader(trip, day.date, isToday = day.date == today, onAdd = { onAddToDay(day.date) })
+                    DayHeader(trip, day.date, isToday = day.date == today, forecast = forecasts[day.date], onAdd = { onAddToDay(day.date) })
                     DayNotices(
                         conflicts = conflicts[day.date].orEmpty(),
                         suggestion = orderSuggestions[day.date],
@@ -502,6 +512,16 @@ private fun ItineraryTab(
                     }
                 }
             }
+            if (forecasts.isNotEmpty()) {
+                item(key = "weather-credit") {
+                    Text(
+                        stringResource(Res.string.weather_credit),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                    )
+                }
+            }
             // Espaço final para o último dia conseguir chegar ao topo da lista; sem ele o mapa,
             // que segue o dia do topo, nunca mostraria os últimos dias.
             item(key = "end-spacer") {
@@ -528,7 +548,7 @@ private fun ItineraryTab(
 }
 
 @Composable
-private fun DayHeader(trip: Trip, date: kotlinx.datetime.LocalDate, isToday: Boolean, onAdd: () -> Unit) {
+private fun DayHeader(trip: Trip, date: kotlinx.datetime.LocalDate, isToday: Boolean, forecast: DayForecast?, onAdd: () -> Unit) {
     val dayNumber = (date.toEpochDays() - trip.startDate.toEpochDays()).toInt() + 1
     val inTrip = date in trip.startDate..trip.endDate
     Column {
@@ -546,7 +566,8 @@ private fun DayHeader(trip: Trip, date: kotlinx.datetime.LocalDate, isToday: Boo
                     color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    TimeFormat.weekdayDayMonth(date),
+                    listOfNotNull(TimeFormat.weekdayDayMonth(date), forecast?.let { "${it.short} ${WeatherCodes.description(it.code)}" })
+                        .joinToString(" · "),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

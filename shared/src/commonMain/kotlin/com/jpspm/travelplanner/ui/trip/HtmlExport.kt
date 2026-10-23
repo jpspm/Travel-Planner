@@ -14,31 +14,39 @@ import com.jpspm.travelplanner.data.export.HtmlExporter
 import com.jpspm.travelplanner.resources.Res
 import com.jpspm.travelplanner.resources.action_ok
 import com.jpspm.travelplanner.resources.html_export_failed
+import com.jpspm.travelplanner.resources.ics_export_failed
+import org.jetbrains.compose.resources.StringResource
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.compose.rememberShareFileLauncher
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
-/** Gera o HTML do roteiro e abre o menu de compartilhar do sistema (RF-30). */
+/** Gera o HTML (RF-30) ou o `.ics` (RF-46) do roteiro e abre o menu de compartilhar do sistema. */
 class HtmlExportViewModel(private val exporter: HtmlExporter) : ViewModel() {
     var exporting by mutableStateOf(false)
         private set
     var ready by mutableStateOf<PlatformFile?>(null)
         private set
-    var failed by mutableStateOf(false)
+    /** Mensagem do último erro, ou `null`. */
+    var failure by mutableStateOf<StringResource?>(null)
         private set
 
-    fun export(tripId: String) {
+    fun export(tripId: String) = run(Res.string.html_export_failed) { exporter.export(tripId) }
+
+    /** O mesmo fluxo, gerando o `.ics` para o calendário (RF-46). */
+    fun exportCalendar(tripId: String) = run(Res.string.ics_export_failed) { exporter.exportCalendar(tripId) }
+
+    private fun run(error: StringResource, build: suspend () -> PlatformFile) {
         if (exporting) return
         exporting = true
         viewModelScope.launch {
             try {
-                ready = exporter.export(tripId)
+                ready = build()
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                failed = true
+                failure = error
             } finally {
                 exporting = false
             }
@@ -50,7 +58,7 @@ class HtmlExportViewModel(private val exporter: HtmlExporter) : ViewModel() {
     }
 
     fun dismissError() {
-        failed = false
+        failure = null
     }
 }
 
@@ -65,10 +73,10 @@ fun HtmlExportEffects(viewModel: HtmlExportViewModel) {
             viewModel.shared()
         }
     }
-    if (viewModel.failed) {
+    viewModel.failure?.let { failure ->
         AlertDialog(
             onDismissRequest = viewModel::dismissError,
-            text = { Text(stringResource(Res.string.html_export_failed)) },
+            text = { Text(stringResource(failure)) },
             confirmButton = { TextButton(onClick = viewModel::dismissError) { Text(stringResource(Res.string.action_ok)) } },
         )
     }

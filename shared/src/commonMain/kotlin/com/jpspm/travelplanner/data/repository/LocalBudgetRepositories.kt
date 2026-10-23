@@ -1,5 +1,6 @@
 package com.jpspm.travelplanner.data.repository
 
+import com.jpspm.travelplanner.core.money.Currency
 import com.jpspm.travelplanner.core.newId
 import com.jpspm.travelplanner.data.local.AppDatabase
 import com.jpspm.travelplanner.data.local.CategoryBudgetEntity
@@ -23,6 +24,10 @@ private fun ExpenseEntity.toDomain() = Expense(
     category = runCatching { ExpenseCategory.valueOf(category) }.getOrDefault(ExpenseCategory.OTHER),
     date = LocalDate.parse(date),
     description = description,
+    currency = Currency.of(currency),
+    originalCents = originalCents,
+    paidBy = paidBy,
+    splitAmong = splitAmong.split(',').filter { it.isNotBlank() },
 )
 
 class LocalBudgetRepository(
@@ -52,6 +57,10 @@ class LocalBudgetRepository(
             description = input.description.trim(),
             createdAt = current?.createdAt ?: now,
             updatedAt = now,
+            currency = input.currency.name,
+            originalCents = input.originalCents,
+            paidBy = input.paidBy,
+            splitAmong = input.splitAmong.joinToString(","),
         )
         db.expenseDao().upsert(entity)
         return entity.id

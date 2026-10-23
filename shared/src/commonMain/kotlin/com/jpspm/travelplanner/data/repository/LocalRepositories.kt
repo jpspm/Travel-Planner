@@ -202,6 +202,7 @@ class LocalTripRepository(
         val checklist = db.checklistDao().getByTrip(id)
         val ideas = db.ideaDao().getByTrip(id)
         val categoryBudgets = db.categoryBudgetDao().getByTrip(id)
+        val travelers = db.travelerDao().getByTrip(id)
 
         // Arquivos são copiados antes da transação; se ela falhar, as cópias são apagadas.
         val newCover = copyFile(trip.coverPhotoPath)
@@ -233,6 +234,7 @@ class LocalTripRepository(
                     newAttachments.forEach { db.attachmentDao().upsert(it) }
                     checklist.forEach { db.checklistDao().upsert(it.copy(id = newId(), tripId = newTripId, done = false, createdAt = now, updatedAt = now)) }
                     categoryBudgets.forEach { db.categoryBudgetDao().upsert(it.copy(tripId = newTripId, updatedAt = now)) }
+                    travelers.forEach { db.travelerDao().upsert(it.copy(id = newId(), tripId = newTripId, createdAt = now, updatedAt = now)) }
                     ideas.forEach { db.ideaDao().upsert(it.copy(id = newId(), tripId = newTripId, placeId = it.placeId?.let(placeIds::get), createdAt = now, updatedAt = now)) }
                 }
             }
@@ -450,6 +452,8 @@ class LocalReservationRepository(
             detailsJson = encodeDetails(input.details.filterKeys { key -> input.type.fields.any { it.key == key } }),
             createdAt = current?.createdAt ?: now,
             updatedAt = now,
+            priceCurrency = input.priceCurrency.name,
+            priceOriginalCents = input.priceOriginalCents,
         )
         db.reservationDao().upsert(entity)
         if (current?.placeId != null && placeId == null) places.cleanupUnused(tripId)

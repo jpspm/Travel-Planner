@@ -50,6 +50,14 @@ import com.jpspm.travelplanner.ui.reservation.ReservationDetailViewModel
 import com.jpspm.travelplanner.ui.trip.TripDetailViewModel
 import com.jpspm.travelplanner.ui.trips.TripEditorViewModel
 import com.jpspm.travelplanner.ui.trips.TripsViewModel
+import com.jpspm.travelplanner.data.remote.FrankfurterClient
+import com.jpspm.travelplanner.data.remote.OpenMeteoClient
+import com.jpspm.travelplanner.data.repository.LocalCurrencyRepository
+import com.jpspm.travelplanner.data.repository.LocalTravelerRepository
+import com.jpspm.travelplanner.data.repository.LocalWeatherRepository
+import com.jpspm.travelplanner.domain.repository.CurrencyRepository
+import com.jpspm.travelplanner.domain.repository.TravelerRepository
+import com.jpspm.travelplanner.domain.weather.WeatherRepository
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
@@ -72,6 +80,12 @@ val dataModule = module {
     single<MapSnapshotRepository> { LocalMapSnapshotRepository(get(), get(), get()) }
     single<BudgetRepository> { LocalBudgetRepository(get(), get()) }
     single<ChecklistRepository> { LocalChecklistRepository(get(), get()) }
+    // Tempo, câmbio e divisão de gastos (RF-47 a RF-49).
+    single { OpenMeteoClient(get()) }
+    single { FrankfurterClient(get()) }
+    single<WeatherRepository> { LocalWeatherRepository(get(), get(), get()) }
+    single<CurrencyRepository> { LocalCurrencyRepository(get(), get(), get()) }
+    single<TravelerRepository> { LocalTravelerRepository(get(), get()) }
     single<IdeaRepository> { LocalIdeaRepository(get(), get(), get(), get()) }
     single { HtmlExporter(get(), get(), get(), get(), get(), get()) }
     // Lembretes, widget e compartilhamento de entrada (RF-43 a RF-45).
@@ -83,7 +97,7 @@ val dataModule = module {
 val uiModule = module {
     viewModel { TripsViewModel(get(), get(), get(), get(), get()) }
     viewModel { params -> TripEditorViewModel(params.getOrNull(), get()) }
-    viewModel { params -> TripDetailViewModel(params.get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { params -> TripDetailViewModel(params.get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { params -> DestinationEditorViewModel(params[0], params.values.getOrNull(1) as String?, get(), get()) }
     viewModel { params ->
         ActivityEditorViewModel(params[0], params.values.getOrNull(1) as String?, params.values.getOrNull(2) as String?, get(), get())
@@ -101,7 +115,7 @@ val uiModule = module {
     viewModel { HtmlExportViewModel(get()) }
     viewModel { RemindersViewModel(get()) }
     viewModel { ShareTargetViewModel(get(), get(), get()) }
-    viewModel { params -> BudgetViewModel(params.get(), get(), get(), get()) }
+    viewModel { params -> BudgetViewModel(params.get(), get(), get(), get(), get()) }
     viewModel { params -> ChecklistViewModel(params.get(), get()) }
     viewModel { params -> IdeasViewModel(params.get(), get(), get()) }
     viewModel { params -> NearbyViewModel(params.get(), get(), get(), get(), get(), get(), get()) }

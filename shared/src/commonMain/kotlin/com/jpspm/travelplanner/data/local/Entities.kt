@@ -133,6 +133,9 @@ data class ReservationEntity(
     val detailsJson: String,
     val createdAt: Long,
     val updatedAt: Long,
+    /** Moeda do valor pago; `priceCents` fica sempre em BRL (versão 8). */
+    @ColumnInfo(defaultValue = "BRL") val priceCurrency: String = "BRL",
+    @ColumnInfo(defaultValue = "NULL") val priceOriginalCents: Long? = null,
 )
 
 @Serializable
@@ -188,12 +191,21 @@ data class MapSnapshotEntity(
 data class ExpenseEntity(
     @PrimaryKey val id: String,
     val tripId: String,
+    /** Sempre em BRL (convertido, se o gasto foi em outra moeda). */
     val amountCents: Long,
     val category: String,
     val date: String,
     val description: String,
     val createdAt: Long,
     val updatedAt: Long,
+    /** Moeda em que o gasto foi feito (versão 8). */
+    @ColumnInfo(defaultValue = "BRL") val currency: String = "BRL",
+    /** Valor na moeda original, em centavos; `null` quando foi em BRL. */
+    @ColumnInfo(defaultValue = "NULL") val originalCents: Long? = null,
+    /** Viajante que pagou (RF-49); `null` = o primeiro viajante. */
+    @ColumnInfo(defaultValue = "NULL") val paidBy: String? = null,
+    /** IDs dos viajantes que dividem, separados por vírgula; vazio = todos. */
+    @ColumnInfo(defaultValue = "") val splitAmong: String = "",
 )
 
 /** Orçamento planejado por categoria (RF-22). O total fica em `trips.budgetTotalCents`. Versão 4. */
@@ -251,4 +263,46 @@ data class IdeaEntity(
     val updatedAt: Long,
     /** `ACTIVITY` ou o nome de um [com.jpspm.travelplanner.domain.model.ReservationType]. Versão 7 do banco. */
     @ColumnInfo(defaultValue = "ACTIVITY") val kind: String = "ACTIVITY",
+)
+
+/** Viajante da viagem, para dividir gastos (RF-49). Versão 8. */
+@Serializable
+@Entity(
+    tableName = "travelers",
+    foreignKeys = [
+        ForeignKey(entity = TripEntity::class, parentColumns = ["id"], childColumns = ["tripId"], onDelete = ForeignKey.CASCADE),
+    ],
+    indices = [Index("tripId")],
+)
+data class TravelerEntity(
+    @PrimaryKey val id: String,
+    val tripId: String,
+    val name: String,
+    val sortOrder: Int,
+    val createdAt: Long,
+    val updatedAt: Long,
+)
+
+/** Previsão do tempo salva (RF-47). Cache: não entra no backup. Versão 8. */
+@Entity(tableName = "weather_forecasts", primaryKeys = ["latitude", "longitude", "date"])
+data class WeatherEntity(
+    /** Coordenadas arredondadas para 2 casas (~1 km), para reaproveitar a previsão de lugares vizinhos. */
+    val latitude: Double,
+    val longitude: Double,
+    val date: String,
+    val maxC: Double,
+    val minC: Double,
+    /** Código de tempo da OMM usado pelo Open-Meteo. */
+    val code: Int,
+    val updatedAt: Long,
+)
+
+/** Cotação diária em BRL de uma moeda (RF-48). Cache: não entra no backup. Versão 8. */
+@Entity(tableName = "exchange_rates", primaryKeys = ["currency", "date"])
+data class ExchangeRateEntity(
+    val currency: String,
+    val date: String,
+    /** Quantos BRL vale 1 unidade da moeda. */
+    val rateToBrl: Double,
+    val updatedAt: Long,
 )

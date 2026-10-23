@@ -1,157 +1,160 @@
 # Travel Planner
 
-App de planejamento de viagens: **um lugar só para a viagem inteira**. Roteiro por dia com fuso horário, reservas com QR code e PDF, mapa, fotos dos lugares, orçamento, checklist e o histórico depois que a viagem acaba.
+A trip-planning app that keeps **the whole trip in one place**: a day-by-day itinerary with time zones, bookings with QR codes and PDFs, maps, place photos, budget, checklist, and a trip history once the trip is over.
 
-- **Local-first e offline:** sem servidor, sem login e sem conta. Os dados ficam no aparelho.
-- **Custo zero:** só APIs gratuitas, sem chave (OpenStreetMap, Wikimedia, OpenFreeMap).
-- **Kotlin Multiplatform + Compose Multiplatform:** o Android é a plataforma principal. O iOS está preparado na arquitetura, mas não foi compilado nem testado (não há Mac).
-
-As decisões de arquitetura e os requisitos estão nos ADRs, na pasta acima deste projeto:
-
-- [ADR-001 — Arquitetura e requisitos do MVP](../../ADR-001-arquitetura-e-requisitos.md)
-- [ADR-002 — Próximos passos](../../ADR-002-proximos-passos.md)
+- **Local-first and offline:** no server, no login, no account. All data stays on the device.
+- **Zero cost:** only free, keyless APIs (OpenStreetMap, Wikimedia, OpenFreeMap, Open-Meteo, Frankfurter).
+- **Kotlin Multiplatform + Compose Multiplatform:** Android is the main platform. iOS is supported by the architecture but has not been compiled or tested yet (no Mac available).
 
 ---
 
-## Funcionalidades
+## Features
 
-| Área | O que tem |
+| Area | What it does |
 |---|---|
-| **Viagens** | Criar, editar, duplicar e excluir; foto de capa da galeria ou de um lugar do roteiro; separação em em andamento, próximas e passadas |
-| **Hoje** | Cartão na tela inicial com o próximo compromisso e os ingressos e passagens do dia (QR code em 2 toques) |
-| **Roteiro** | Dias com atividades e reservas, horário opcional, **fuso IANA em cada item** (`14:00 (Roma, UTC+2)`), ordem pelo instante real entre fusos, mover entre dias |
-| **Mapa** | Mapa interativo no topo do roteiro (dia ou viagem inteira); **imagem estática salva** para ver sem internet |
-| **Planejamento** | Alertas de conflito (horários sobrepostos, atividade durante voo, noite sem hospedagem, lugar fechado), distância e tempo a pé entre itens, sugestão de ordem do dia |
-| **Lugares** | Busca com mapa (sugestões ao digitar e busca completa em português), foto da Wikimedia com créditos, horário de funcionamento, fuso sugerido pelas coordenadas, abrir no app de mapas |
-| **Ideias** | Lista do que fazer sem dia definido, com as mesmas categorias do roteiro (atividade ou tipo de reserva), agrupada por cidade. Inclui **atrações por perto**, da Wikipédia. Cada ideia vai para o roteiro com um toque |
-| **Reservas** | Voo, hospedagem, ingresso, trem/ônibus, carro, restaurante e outro, cada uma com seus campos; anexos (imagem, print, PDF, foto) abertos em tela cheia com brilho máximo |
-| **Cidades** | Detectadas sozinhas pelos lugares buscados (raio de 40 km) ou cadastradas à mão; tela por cidade com mapa e roteiro filtrado |
-| **Gastos** | Orçamento total e por categoria, gastos avulsos, valor das reservas somado automaticamente, planejado × gasto |
-| **Checklist** | Itens pré-viagem, com sugestões para começar |
-| **Resumo** | Viagens passadas abrem num resumo com números, cidades, fotos e gasto total |
-| **Compartilhar** | Roteiro em **HTML autocontido** (um arquivo, sem anexos, códigos nem valores), enviado pelo menu do sistema |
-| **Backup** | Exportar e importar `.zip` (todas as viagens ou uma), mesclar ou substituir, com lembrete quando faz tempo que não há backup |
-| **Lembretes** *(Android)* | Notificações antes de voos e trens, outras reservas e atividades, com antecedência ajustável |
-| **Compartilhar para o app** *(Android)* | Receber PDF ou print de outro app ("Compartilhar → Travel Planner") e anexar a uma reserva |
-| **Widget "Hoje"** *(Android)* | Viagem do dia, próximo compromisso e ingressos de hoje na tela inicial |
+| **Trips** | Create, edit, duplicate and delete trips; cover photo from the gallery or from a place in the itinerary; grouped into ongoing, upcoming and past |
+| **Today** | Card on the home screen with the next event and today's tickets and boarding passes (QR code in two taps) |
+| **Itinerary** | Days with activities and bookings, optional times, **an IANA time zone on every item** (`14:00 (Rome, UTC+2)`), ordering by the real instant across time zones, moving items between days |
+| **Weather** | Daily forecast (max, min and conditions) on each itinerary day, up to 16 days ahead, saved for offline use |
+| **Map** | Interactive map above the itinerary (one day or the whole trip), plus a **saved static image** for offline viewing |
+| **Planning** | Conflict warnings (overlapping times, an activity during a flight, a night without lodging, a closed place), walking distance and time between items, suggested order for the day |
+| **Places** | Search with a map (suggestions while typing, plus full search), Wikimedia photo with credits, opening hours, time zone suggested from coordinates, open in the maps app |
+| **Ideas** | A list of things to do without a set day, using the same categories as the itinerary (an activity or a booking type), grouped by city. Includes **nearby attractions** from Wikipedia. Each idea moves into the itinerary with one tap |
+| **Bookings** | Flight, lodging, ticket, train/bus, car rental, restaurant and other, each with its own fields; attachments (image, screenshot, PDF, photo) open full screen at maximum brightness |
+| **Cities** | Detected automatically from the places you search (40 km radius) or added by hand; a screen per city with a map and the filtered itinerary |
+| **Expenses** | Total and per-category budget, one-off expenses, booking prices added automatically, planned vs. spent |
+| **Currencies** | Expenses and booking prices can be entered in about 30 currencies and are converted to BRL with the exchange rate of the day; the original amount is kept and shown alongside |
+| **Splitting costs** | Travelers per trip, "paid by" and "split among" on each expense, balances and a settle-up with as few transfers as possible |
+| **Checklist** | Pre-trip items, with suggestions to get started |
+| **Summary** | Past trips open in a summary with numbers, cities, photos and total spending |
+| **Sharing** | The itinerary as a **self-contained HTML file** (one file, with no attachments, codes or prices), sent through the system share sheet |
+| **Calendar** | Export the itinerary as an `.ics` file to import into any calendar app |
+| **Backup** | Export and import a `.zip` (all trips or one), merge or replace, with a reminder when no backup has been made in a while |
+| **Reminders** *(Android)* | Notifications before flights and trains, other bookings and activities, with adjustable lead times |
+| **Share to the app** *(Android)* | Receive a PDF or screenshot from another app ("Share → Travel Planner") and attach it to a booking |
+| **"Today" widget** *(Android)* | Today's trip, the next event and today's tickets on the home screen |
 
-A interface é **só em pt-BR** e a moeda é **BRL**. Os textos ficam centralizados nos recursos do Compose, para facilitar outros idiomas no futuro.
+The interface is **Brazilian Portuguese only**, and totals are in **BRL**. All strings live in Compose resources, so other languages can be added later.
 
 ---
 
 ## Stack
 
-| Camada | Escolha |
+| Layer | Choice |
 |---|---|
-| Linguagem e UI | Kotlin 2.4, Compose Multiplatform 1.12, Material 3 |
-| Navegação | Navigation Compose (rotas tipadas), transições horizontais |
-| Persistência | Room KMP com SQLite empacotado (`sqlite-bundled`), migrações automáticas versionadas |
-| Datas e fusos | `kotlinx-datetime` (`LocalDateTime` + fuso IANA) |
-| Rede | Ktor Client (OkHttp no Android, Darwin no iOS) |
-| Imagens | Coil 3 (com Ktor e integração com o FileKit) |
-| Mapa | MapLibre Compose + estilo vetorial do OpenFreeMap |
-| Arquivos | FileKit (seletores, câmera, compartilhar) |
-| Injeção de dependência | Koin |
-| Serialização | `kotlinx-serialization` (JSON do backup) |
+| Language and UI | Kotlin 2.4, Compose Multiplatform 1.12, Material 3 |
+| Navigation | Navigation Compose (typed routes), horizontal transitions |
+| Persistence | Room KMP with bundled SQLite (`sqlite-bundled`), versioned automatic migrations |
+| Dates and time zones | `kotlinx-datetime` (`LocalDateTime` + IANA time zone) |
+| Networking | Ktor Client (OkHttp on Android, Darwin on iOS) |
+| Images | Coil 3 (with Ktor and the FileKit integration) |
+| Map | MapLibre Compose + OpenFreeMap vector style |
+| Files | FileKit (pickers, camera, sharing) |
+| Dependency injection | Koin |
+| Serialization | `kotlinx-serialization` (backup JSON) |
 
-**APIs gratuitas usadas (sem chave):**
+**Free APIs used (no key required):**
 
-| Serviço | Para quê |
+| Service | Used for |
 |---|---|
-| **Photon** (komoot) | Sugestões de lugar enquanto digita |
-| **Nominatim** (OSM) | Busca completa com nomes em português, Wikidata e horário de funcionamento (máximo de 1 requisição/s, só por ação do usuário) |
-| **Wikidata, Wikimedia Commons, Wikipédia** | Foto do lugar com créditos e atrações por perto |
-| **OpenFreeMap** | Mapa vetorial (atribuição sempre visível) |
+| **Photon** (komoot) | Place suggestions while typing |
+| **Nominatim** (OSM) | Full search with Portuguese names, Wikidata and opening hours (at most 1 request/s, only on user action) |
+| **Wikidata, Wikimedia Commons, Wikipedia** | Place photos with credits and nearby attractions |
+| **OpenFreeMap** | Vector map (attribution always visible) |
+| **Open-Meteo** | Daily weather forecast (credited in the itinerary) |
+| **Frankfurter** | Daily exchange rates from the European Central Bank |
 
-Todas as requisições se identificam com o `User-Agent` do app.
+Every request identifies itself with the app's `User-Agent`.
 
 ---
 
-## Estrutura do código
+## Code structure
 
-O código fica quase todo em `shared/src/commonMain` (pacote `com.jpspm.travelplanner`):
+Almost all code lives in `shared/src/commonMain` (package `com.jpspm.travelplanner`):
 
 ```
-core/          tempo e fusos, dinheiro (BRL), geografia, IDs
-domain/        regras puras, sem dependência de plataforma
+core/          time and time zones, money and currencies, geography, IDs
+domain/        pure rules, no platform dependencies
   model/         Trip, Activity, Reservation, Place…
-  agenda/        monta o roteiro dia a dia
-  planning/      conflitos, tempo a pé, ordem sugerida
-  places/        horário de funcionamento (opening_hours)
-  city/          agrupamento por cidade
-  budget/        planejado × gasto
-  reminders/     cálculo dos lembretes
-  export/        HTML do roteiro
-  map/           o que vai em cada imagem estática do mapa
-  repository/    interfaces dos repositórios
-data/          implementações: Room, arquivos, APIs, backup, exportação, sincronização em segundo plano
-ui/            telas Compose, ViewModels, navegação e tema
-platform/      expect/actual e interfaces de plataforma
-di/            módulos do Koin
+  agenda/        builds the day-by-day itinerary
+  planning/      conflicts, walking time, suggested order
+  places/        opening hours (opening_hours)
+  city/          grouping by city
+  budget/        planned vs. spent, cost splitting
+  weather/       forecast model and which place to use for each day
+  reminders/     reminder scheduling rules
+  export/        itinerary HTML and calendar (.ics)
+  map/           what goes into each static map image
+  repository/    repository interfaces
+data/          implementations: Room, files, remote APIs, backup, export, background sync
+ui/            Compose screens, ViewModels, navigation and theme
+platform/      expect/actual and platform interfaces
+di/            Koin modules
 ```
 
-- `shared/src/androidMain`: banco, PDF, brilho de tela, ZIP, notificações, widget, compartilhamento de entrada.
-- `shared/src/iosMain`: os `actual` equivalentes, ainda não compilados.
-- `androidApp/`: Activity, Application, manifesto e ícone.
-- `iosApp/`: ponto de entrada do iOS (Xcode).
-- `shared/schemas/`: schema exportado de cada versão do banco (hoje até a v7).
-- `design/`: ícone (`icon.svg`) e o script que gera o ícone adaptativo do Android.
+- `shared/src/androidMain`: database, PDF, screen brightness, ZIP, notifications, widget, incoming shares.
+- `shared/src/iosMain`: the matching `actual` implementations, not compiled yet.
+- `androidApp/`: Activity, Application, manifest and icon.
+- `iosApp/`: iOS entry point (Xcode).
+- `shared/schemas/`: exported schema for each database version (currently up to v8).
+- `design/`: the icon (`icon.svg`) and the script that generates the Android adaptive icon.
 
 ---
 
-## Como rodar
+## Running
 
-**Requisitos:** Android Studio (ou JDK 21+ e Android SDK com a plataforma 37). O `local.properties` precisa apontar para o SDK (`sdk.dir=...`); o Android Studio cria esse arquivo sozinho.
+**Requirements:** Android Studio (or JDK 21+ and the Android SDK with platform 37). `local.properties` must point to the SDK (`sdk.dir=...`); Android Studio creates this file automatically.
 
-| Tarefa | Comando |
+| Task | Command |
 |---|---|
-| Gerar o APK de debug | `./gradlew :androidApp:assembleDebug` |
-| Instalar no celular ou emulador | `./gradlew :androidApp:installDebug` |
-| Testes (regras e formatos, na JVM) | `./gradlew :shared:testAndroidHostTest` |
-| Testes no simulador iOS (só com Mac) | `./gradlew :shared:iosSimulatorArm64Test` |
-| Regenerar o ícone do Android | `python design/make_android_icon.py` |
+| Build the debug APK | `./gradlew :androidApp:assembleDebug` |
+| Install on a phone or emulator | `./gradlew :androidApp:installDebug` |
+| Tests (rules and formats, on the JVM) | `./gradlew :shared:testAndroidHostTest` |
+| Tests on the iOS simulator (Mac only) | `./gradlew :shared:iosSimulatorArm64Test` |
+| Regenerate the Android icon | `python design/make_android_icon.py` |
 
-No Windows, use `gradlew.bat`. **iOS:** abra `iosApp/` no Xcode, num Mac.
+On Windows, use `gradlew.bat`. **iOS:** open `iosApp/` in Xcode on a Mac.
 
-**Se um recurso do Android "sumir" no build:** o cache do Gradle está ligado (`org.gradle.caching=true`). Se um recurso renomeado ou movido não for encontrado, rode `./gradlew :androidApp:mergeDebugResources --rerun-tasks` e gere o APK de novo.
-
----
-
-## Testes
-
-Os testes ficam em `shared/src/commonTest` e cobrem as regras de domínio (RNF-20 e RNF-29):
-
-- fusos, horário de verão e formatação;
-- dinheiro em BRL;
-- montagem do roteiro e ordem entre fusos;
-- conflitos, tempo a pé e ordem sugerida;
-- interpretador de `opening_hours`;
-- agrupamento por cidade;
-- orçamento;
-- lembretes;
-- busca e fotos (com respostas simuladas, sem rede);
-- formato do backup e proteção contra arquivos maliciosos ("zip slip");
-- HTML exportado (garante que não vazam códigos, valores nem anexos);
-- projeção do mapa.
-
-O ZIP é testado em `androidHostTest`.
+**If an Android resource "disappears" from the build:** the Gradle build cache is enabled (`org.gradle.caching=true`). If a renamed or moved resource can't be found, run `./gradlew :androidApp:mergeDebugResources --rerun-tasks` and build the APK again.
 
 ---
 
-## Dados e privacidade
+## Tests
 
-- Tudo fica no armazenamento privado do app: banco SQLite e pasta de arquivos com anexos, fotos e mapas. Os caminhos são guardados de forma relativa.
-- Nada é enviado a servidor próprio. A internet só é usada para buscar lugares, fotos, atrações e o mapa.
-- **Backup:** `.zip` com `manifest.json` (`schemaVersion`), `data.json` e `files/`. Versões novas do app importam backups antigos.
-- **HTML compartilhado:** nunca inclui anexos, códigos de reserva, valores, notas nem detalhes das reservas.
+Tests live in `shared/src/commonTest` and cover the domain rules:
+
+- time zones, daylight saving time and formatting;
+- money, currency conversion and formatting;
+- itinerary building and ordering across time zones;
+- conflicts, walking time and suggested order;
+- the `opening_hours` parser;
+- grouping by city;
+- budget and cost splitting;
+- reminders;
+- search, photos, weather and exchange rates (with mocked responses, no network);
+- backup format and protection against malicious archives ("zip slip");
+- exported HTML and calendar (checks that codes, prices and attachments never leak);
+- map projection.
+
+The ZIP code is tested in `androidHostTest`.
 
 ---
 
-## Plataformas
+## Data and privacy
+
+- Everything stays in the app's private storage: a SQLite database and a files folder with attachments, photos and maps. File paths are stored as relative paths.
+- Nothing is sent to a server of our own. The internet is only used to look up places, photos, attractions, the map, the weather forecast and exchange rates.
+- Weather forecasts and exchange rates are a local cache: they are not included in backups.
+- **Backup:** a `.zip` with `manifest.json` (`schemaVersion`), `data.json` and `files/`. Newer app versions can import older backups.
+- **Shared HTML and calendar files:** never include attachments, booking codes or prices. The HTML also leaves out notes and booking details.
+
+---
+
+## Platforms
 
 | | Android | iOS |
 |---|---|---|
-| App principal | ✅ minSdk 26, testado em aparelho | ⚠️ código preparado, nunca compilado |
-| Backup em ZIP | ✅ | ❌ falta implementar o ZIP |
-| Lembretes, widget, receber arquivos | ✅ | ❌ fora do escopo atual (ADR-002, RNF-28) |
-| Detecção de internet | ✅ | ⚠️ sempre "conectado" por enquanto |
+| Main app | ✅ minSdk 26, tested on a device | ⚠️ code ready, never compiled |
+| ZIP backup | ✅ | ❌ ZIP not implemented yet |
+| Reminders, widget, incoming shares | ✅ | ❌ out of current scope |
+| Connectivity detection | ✅ | ⚠️ always "online" for now |

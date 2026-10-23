@@ -57,6 +57,7 @@ import com.jpspm.travelplanner.domain.model.Reservation
 import com.jpspm.travelplanner.domain.repository.DestinationRepository
 import com.jpspm.travelplanner.domain.repository.ReservationRepository
 import com.jpspm.travelplanner.resources.*
+import com.jpspm.travelplanner.ui.components.formatPaid
 import com.jpspm.travelplanner.ui.components.BackButton
 import com.jpspm.travelplanner.ui.components.LoadingScreen
 import com.jpspm.travelplanner.ui.components.ConfirmDeleteDialog
@@ -209,7 +210,9 @@ fun ReservationDetailScreen(
             }
             reservation.place?.address?.takeIf { it.isNotBlank() }?.let { DetailRow(stringResource(reservation.type.placeLabel), it) }
             reservation.confirmationCode.takeIf { it.isNotBlank() }?.let { DetailRow(stringResource(reservation.type.codeLabel), it) }
-            reservation.priceCents?.let { DetailRow(stringResource(Res.string.field_price), Money.format(it)) }
+            reservation.priceCents?.let {
+                DetailRow(stringResource(Res.string.field_price), formatPaid(it, reservation.priceCurrency, reservation.priceOriginalCents))
+            }
             reservation.notes.takeIf { it.isNotBlank() }?.let { DetailRow(stringResource(Res.string.field_notes), it) }
         }
     }

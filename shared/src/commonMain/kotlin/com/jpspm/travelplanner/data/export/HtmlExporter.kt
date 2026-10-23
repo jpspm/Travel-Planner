@@ -8,6 +8,7 @@ import com.jpspm.travelplanner.domain.city.CityGrouper
 import com.jpspm.travelplanner.domain.city.place
 import com.jpspm.travelplanner.domain.export.HtmlImages
 import com.jpspm.travelplanner.domain.export.HtmlTexts
+import com.jpspm.travelplanner.domain.export.TripCalendar
 import com.jpspm.travelplanner.domain.export.TripHtml
 import com.jpspm.travelplanner.domain.model.ReservationType
 import com.jpspm.travelplanner.domain.repository.ActivityRepository
@@ -92,6 +93,24 @@ class HtmlExporter(
         )
         val file = cacheDir() / "roteiro-${LocalBackupRepository.slug(trip.name).ifBlank { "viagem" }}.html"
         file.writeString(html)
+        file
+    }
+
+    /** Roteiro em `.ics` para importar no calendário (RF-46). */
+    suspend fun exportCalendar(tripId: String): PlatformFile = withContext(Dispatchers.IO) {
+        val trip = requireNotNull(trips.getTrip(tripId)) { "Viagem não encontrada" }
+        val days = AgendaBuilder.build(trip.days, activities.observeActivities(tripId).first(), reservations.observeReservations(tripId).first())
+        val typeLabels = ReservationType.entries.associateWith { getString(it.label) }
+        val momentLabels = ReservationType.entries.associateWith { getString(it.startLabel) to getString(it.endLabel) }
+        val labels = TripCalendar.Labels(
+            moment = { item ->
+                val (start, end) = momentLabels.getValue(item.reservation.type)
+                if (item.role == AgendaItem.ReservationItem.Role.END) end else start
+            },
+            type = { typeLabels.getValue(it.reservation.type) },
+        )
+        val file = cacheDir() / "roteiro-${LocalBackupRepository.slug(trip.name).ifBlank { "viagem" }}.ics"
+        file.writeString(TripCalendar.build(trip, days, labels, clock.now()))
         file
     }
 

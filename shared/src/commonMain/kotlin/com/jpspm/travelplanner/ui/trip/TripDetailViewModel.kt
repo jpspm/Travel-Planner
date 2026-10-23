@@ -21,13 +21,21 @@ import com.jpspm.travelplanner.domain.planning.OrderSuggestion
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.jpspm.travelplanner.domain.weather.DayForecast
+import com.jpspm.travelplanner.domain.weather.WeatherPlanner
+import com.jpspm.travelplanner.domain.weather.WeatherRepository
+import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.plus
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
@@ -58,6 +66,7 @@ class TripDetailViewModel(
     reservations: ReservationRepository,
     private val settings: SettingsStore,
     clock: Clock,
+    private val weather: WeatherRepository,
 ) : ViewModel() {
 
     private val today = clock.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
@@ -87,6 +96,24 @@ class TripDetailViewModel(
             today = today,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TripDetailUiState())
+
+    private val dayPositions = state.map { WeatherPlanner.dayPositions(it.days, it.cities) }.distinctUntilChanged()
+
+    /** Previsão do tempo de cada dia que estiver na janela de previsão (RF-47). */
+    val forecasts: StateFlow<Map<LocalDate, DayForecast>> = combine(
+        dayPositions,
+        weather.observe(today, today.plus(DatePeriod(days = 16))),
+    ) { positions, list -> WeatherPlanner.match(positions, list) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
+    init {
+        // Atualiza quando os lugares do roteiro mudam; sem internet, fica o que estiver salvo.
+        viewModelScope.launch {
+            dayPositions.collectLatest { positions ->
+                if (positions.isNotEmpty()) weather.refresh(WeatherPlanner.requests(positions), today)
+            }
+        }
+    }
 
     fun deleteTrip(onDeleted: () -> Unit) = viewModelScope.launch {
         trips.delete(tripId)
