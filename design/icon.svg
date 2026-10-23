@@ -1,27 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <title>Travel Planner</title>
   <!--
-    Estilo de linha: fundo liso, traço branco único de 20 px com pontas arredondadas.
-    Silhueta do avião baseada no ícone "flight" do Material Icons (Apache 2.0).
+    Caderno aberto: à esquerda, o pin com o caminho tracejado (roteiro); à direita, a checklist.
+    Fundo azul em quadrado arredondado; páginas brancas; detalhes em azul-marinho.
+    design/make_android_icon.py usa estas mesmas formas para o ícone adaptativo do Android.
   -->
-  <rect width="512" height="512" fill="#00658E"/>
+  <rect width="512" height="512" rx="122" fill="#4288EA"/>
 
-  <g transform="translate(-14 18)">
-    <g fill="none" stroke="#FFFFFF" stroke-width="20" stroke-linecap="round" stroke-linejoin="round">
-      <!-- Caderno -->
-      <rect x="132" y="132" width="200" height="268" rx="28"/>
-      <!-- Espiral: argolas atravessando a borda esquerda -->
-      <path d="M112 182 h40 M112 242 h40 M112 302 h40 M112 362 h40"/>
-      <!-- Linhas da página -->
-      <path d="M196 214 h64 M196 266 h96 M196 318 h60"/>
-    </g>
-
-    <!-- Avião (preenchido) saindo do canto do caderno. O contorno grosso na cor do fundo abre o vão entre os dois. -->
-    <g transform="translate(368 148) rotate(45) scale(8.4) translate(-11.5 -12)" stroke-linejoin="round">
-      <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"
-            fill="#00658E" stroke="#00658E" stroke-width="5"/>
-      <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"
-            fill="#FFFFFF" stroke="#FFFFFF" stroke-width="0.8"/>
-    </g>
+  <!-- Páginas -->
+  <g fill="#FFFFFF">
+    <path d="M80,146 Q80,128 97,133.6 L244,182.2 Q249.5,184 249.5,189 L249.5,417 Q249.5,422 244.5,420.2 L97,368 Q80,362 80,345 Z"/>
+    <path d="M432,146 Q432,128 415,133.6 L268,182.2 Q262.5,184 262.5,189 L262.5,417 Q262.5,422 267.5,420.2 L415,368 Q432,362 432,345 Z"/>
   </g>
+
+  <g fill="none" stroke="#1B2E5C" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Caminho tracejado saindo do pin -->
+    <path d="M147.3,293 C150,315 170,326 196,334 C218,341 232,355 236,376" stroke-width="9" stroke-dasharray="10 17"/>
+    <!-- Checklist -->
+    <path d="M291.8,226.6 L301.6,235 L317.7,216.7 M291.8,279.2 L301.6,287.6 L317.7,269.3 M291.8,331.8 L301.6,340.2 L317.7,321.9" stroke-width="7.5"/>
+    <path d="M338.8,221.9 L403.3,207.9 M338.8,274.3 L403.3,260.2 M338.8,326.2 L403.3,310.7" stroke-width="8.5"/>
+  </g>
+
+  <!-- Pin, com o furo vazado -->
+  <path fill="#1B2E5C" fill-rule="evenodd" stroke="#1B2E5C" stroke-width="3" stroke-linejoin="round"
+        d="M147.3,274 L116.7,228.9 A36.5,36.5 0 1 1 177.9,228.9 Z M160.6,212.5 A13.3,13.3 0 1 0 134,212.5 A13.3,13.3 0 1 0 160.6,212.5 Z"/>
 </svg>
